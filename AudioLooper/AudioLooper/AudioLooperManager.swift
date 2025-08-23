@@ -19,6 +19,7 @@ class AudioLooperManager: NSObject, ObservableObject {
     @Published var progress: Double = 0
     @Published var currentTask = ""
     @Published var loopCount: Int = 1
+    @Published var savedAudioFiles: [URL] = []
     
     private var exportSession: AVAssetExportSession?
     
@@ -74,6 +75,36 @@ class AudioLooperManager: NSObject, ObservableObject {
         }
     }
     
+    func loadSavedAudioFiles() {
+        let documentsURL = getDocumentsDirectory()
+        do {
+            let fileURLs = try FileManager.default.contentsOfDirectory(
+                at: documentsURL,
+                includingPropertiesForKeys: [.creationDateKey, .isDirectoryKey],
+                options: .skipsHiddenFiles
+            )
+            
+            // Filter for audio files and sort by creation date (newest first)
+            let audioFiles = fileURLs
+                .filter { url in
+                    let pathExtension = url.pathExtension.lowercased()
+                    return ["m4a", "mp3", "wav", "aac"].contains(pathExtension) && 
+                           url.lastPathComponent.hasPrefix("looped_audio_")
+                }
+                .sorted { url1, url2 in
+                    let date1 = (try? url1.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? Date.distantPast
+                    let date2 = (try? url2.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? Date.distantPast
+                    return date1 > date2
+                }
+            
+            savedAudioFiles = audioFiles
+            print("Found \(audioFiles.count) saved audio files")
+        } catch {
+            print("Failed to load saved audio files: \(error)")
+            savedAudioFiles = []
+        }
+    }
+
     func selectAudio() {
         let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [
             UTType.movie,
@@ -86,7 +117,10 @@ class AudioLooperManager: NSObject, ObservableObject {
             UTType("public.mp3") ?? UTType.audio,
             UTType("public.wav") ?? UTType.audio,
             UTType("public.m4a") ?? UTType.audio,
-            UTType("public.aac-audio") ?? UTType.audio
+            UTType("public.aac-audio") ?? UTType.audio,
+            UTType("com.apple.m4a-audio") ?? UTType.audio,
+            UTType("public.mpeg-4-audio") ?? UTType.audio,
+            UTType("public.aac") ?? UTType.audio
         ])
         documentPicker.allowsMultipleSelection = false
         documentPickerCoordinator = DocumentPickerCoordinator(manager: self)
@@ -197,47 +231,171 @@ class AudioLooperManager: NSObject, ObservableObject {
     }
     
     func loadAudioInfo(from url: URL) {
-        // 只有来自文档选择器的外部文件才需要安全作用域访问权限
-        // 应用内临时文件和沙盒内文件不需要
-        let isAppSandboxFile = url.path.contains(Bundle.main.bundleIdentifier ?? "") || 
-                              url.path.contains("/tmp/") || 
-                              url.path.contains("/Library/") ||
-                              url.path.contains("/Documents/")
+        print("=== Loading Audio Info ===")
+        print("URL: \(url)")
+        print("URL scheme: \(url.scheme ?? "nil")")
+        print("URL isFileURL: \(url.isFileURL)")
         
-        let needsSecurityScope = url.isFileURL && !isAppSandboxFile && 
-                                !url.path.hasPrefix(FileManager.default.temporaryDirectory.path)
+        // 改进沙盒文件判断逻辑
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].path
+        let tempPath = FileManager.default.temporaryDirectory.path
+        let libraryPath = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0].path
+        let bundleId = Bundle.main.bundleIdentifier ?? ""
         
-        var hasSecurityAccess = false
-        if needsSecurityScope {
-            hasSecurityAccess = url.startAccessingSecurityScopedResource()
-            if !hasSecurityAccess {
-                print("Failed to access security scoped resource for URL: \(url)")
-                // 继续尝试，某些情况下仍可能成功
+        print("Documents path: \(documentsPath)")
+        print("Temp path: \(tempPath)")
+        print("Library path: \(libraryPath)")
+        print("Bundle ID: \(bundleId)")
+        
+        let isAppSandboxFile = url.path.hasPrefix(documentsPath) ||
+                              url.path.hasPrefix(tempPath) ||
+                              url.path.hasPrefix(libraryPath) ||
+                              (!bundleId.isEmpty && url.path.contains(bundleId))
+        
+        let needsSecurityScope = url.isFileURL && !isAppSandboxFile
+        
+        print("Is app sandbox file: \(isAppSandboxFile)")
+        print("Needs security scope: \(needsSecurityScope)")
+        
+        // For external files, we need to maintain security scope access throughout the entire operation
+        if needsSecurityScope && !url.startAccessingSecurityScopedResource() {
+            print("CRITICAL: Failed to start accessing security scoped resource")
+            DispatchQueue.main.async {
+                self.showErrorAlert(message: "Cannot access the selected file. Please ensure the file is accessible and try again.")
             }
+            return
         }
         
-        defer {
-            if needsSecurityScope && hasSecurityAccess {
-                url.stopAccessingSecurityScopedResource()
-            }
-        }
-        
+        // Create asset and load audio info
         let asset = AVURLAsset(url: url)
+        
         Task {
+            let workingURL = url // Keep reference for defer block
+            
+            // Important: Maintain the defer block to stop security access
+            defer {
+                if needsSecurityScope {
+                    workingURL.stopAccessingSecurityScopedResource()
+                    print("Stopped accessing security scoped resource")
+                }
+            }
+            
             do {
+                // Get the correct file path, handling URL encoding
+                var filePath = url.path
+                if url.path.contains("%") {
+                    filePath = url.path.removingPercentEncoding ?? url.path
+                }
+                print("Using file path: \(filePath)")
+                
+                // First check if file exists and is readable
+                guard FileManager.default.fileExists(atPath: filePath) else {
+                    print("ERROR: File does not exist at path: \(filePath)")
+                    await MainActor.run {
+                        self.showErrorAlert(message: NSLocalizedString("file_not_found", comment: "File not found error") + ": \(url.lastPathComponent)")
+                    }
+                    return
+                }
+                
+                print("File exists, attempting to load audio properties...")
+                
+                // Check if the file is actually readable
+                let isReadable = FileManager.default.isReadableFile(atPath: filePath)
+                print("File is readable: \(isReadable)")
+                
+                if !isReadable {
+                    print("ERROR: File is not readable")
+                    await MainActor.run {
+                        self.showErrorAlert(message: "Cannot read the selected file. Please check file permissions.")
+                    }
+                    return
+                }
+                
+                // Try to load basic properties first with timeout
+                print("Loading asset duration and tracks...")
                 let duration = try await asset.load(.duration)
+                let tracks = try await asset.load(.tracks)
+                
+                let durationSeconds = CMTimeGetSeconds(duration)
+                print("Successfully loaded audio:")
+                print("- Duration: \(durationSeconds) seconds")
+                print("- Tracks count: \(tracks.count)")
+                
+                // Validate duration
+                if durationSeconds <= 0 || durationSeconds.isNaN || durationSeconds.isInfinite {
+                    print("ERROR: Invalid audio duration: \(durationSeconds)")
+                    await MainActor.run {
+                        self.showErrorAlert(message: "The selected file has invalid duration. Please select a different audio file.")
+                    }
+                    return
+                }
+                
+                // Validate tracks
+                if tracks.isEmpty {
+                    print("ERROR: No tracks found in audio file")
+                    await MainActor.run {
+                        self.showErrorAlert(message: "No audio tracks found in the selected file.")
+                    }
+                    return
+                }
+                
+                // Check for audio tracks specifically
+                let audioTracks = tracks.filter { $0.mediaType == .audio }
+                print("Audio tracks count: \(audioTracks.count)")
+                
+                if audioTracks.isEmpty {
+                    print("ERROR: No audio tracks found")
+                    await MainActor.run {
+                        self.showErrorAlert(message: "The selected file does not contain any audio tracks.")
+                    }
+                    return
+                }
+                
+                print("Audio loading successful! Setting up UI...")
+                
+                // For external files, create a local copy to avoid security scope issues
+                var finalURL = url
+                if needsSecurityScope {
+                    print("Creating local copy of external file...")
+                    do {
+                        let tempDir = FileManager.default.temporaryDirectory
+                        let fileName = "imported_\(Int(Date().timeIntervalSince1970))_\(url.lastPathComponent)"
+                        let localURL = tempDir.appendingPathComponent(fileName)
+                        
+                        // Remove existing file if any
+                        try? FileManager.default.removeItem(at: localURL)
+                        
+                        // Copy file to temp directory
+                        try FileManager.default.copyItem(at: url, to: localURL)
+                        finalURL = localURL
+                        print("Successfully created local copy at: \(localURL)")
+                    } catch {
+                        print("Warning: Failed to create local copy, using original URL: \(error)")
+                        // Continue with original URL
+                    }
+                }
+                
                 await MainActor.run {
-                    self.selectedAudioURL = url
-                    self.audioDuration = CMTimeGetSeconds(duration)
+                    self.selectedAudioURL = finalURL
+                    self.audioDuration = durationSeconds
                     
                     // Set initial range with default free user setting
                     // The UI layer will call setInitialTimeRange again with correct subscription status
                     self.setInitialTimeRange(isSubscribed: false)
+                    
+                    print("Audio info loaded successfully in UI with URL: \(finalURL)")
                 }
+                
             } catch {
-                print("Failed to load video duration: \(error)")
+                print("FAILED to load audio: \(error)")
+                print("Error details: \(error.localizedDescription)")
+                if let urlError = error as? URLError {
+                    print("URL Error code: \(urlError.code)")
+                }
+                
                 await MainActor.run {
-                    self.showErrorAlert(message: NSLocalizedString("failed_to_load_audio", comment: "Failed to load audio error"))
+                    let errorMessage = String(format: NSLocalizedString("failed_to_load_audio_detailed", comment: "Failed to load audio with details"), error.localizedDescription)
+                    self.showErrorAlert(message: errorMessage)
                 }
             }
         }
@@ -397,6 +555,8 @@ class AudioLooperManager: NSObject, ObservableObject {
             
             switch exportSession.status {
             case .completed:
+                // Refresh saved files list after successful export
+                self.loadSavedAudioFiles()
                 completion(.success(outputURL))
             case .failed:
                 completion(.failure(exportSession.error ?? AudioLoopError.exportFailed))
@@ -460,13 +620,128 @@ class DocumentPickerCoordinator: NSObject, UIDocumentPickerDelegate {
     }
     
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-        guard let url = urls.first else { return }
-        manager.loadAudioInfo(from: url)
+        print("Document picker selected \(urls.count) files")
+        
+        guard let url = urls.first else { 
+            print("Error: No URL selected from document picker")
+            return 
+        }
+        
+        print("Selected file URL: \(url)")
+        print("File path: \(url.path)")
+        print("File extension: \(url.pathExtension)")
+        print("File name: \(url.lastPathComponent)")
+        
+        // Get the correct file path, handling URL encoding and iCloud paths
+        var filePath = url.path
+        if url.path.contains("%20") {
+            filePath = url.path.removingPercentEncoding ?? url.path
+        }
+        
+        print("Decoded file path: \(filePath)")
+        
+        // For iCloud files, create a local copy immediately with security scope access
+        var workingURL = url
+        if url.path.contains("Mobile Documents") {
+            print("Detected iCloud file, creating local copy with security scope access...")
+            
+            // Start security scoped access for iCloud files
+            let hasSecurityAccess = url.startAccessingSecurityScopedResource()
+            print("Started security scoped access: \(hasSecurityAccess)")
+            
+            defer {
+                if hasSecurityAccess {
+                    url.stopAccessingSecurityScopedResource()
+                    print("Stopped security scoped access")
+                }
+            }
+            
+            if !hasSecurityAccess {
+                print("Failed to start security scoped access for iCloud file")
+                DispatchQueue.main.async {
+                    self.manager.showErrorAlert(message: "Cannot access the selected iCloud file. Please try again.")
+                }
+                return
+            }
+            
+            // Create a local copy in temp directory
+            let tempDir = FileManager.default.temporaryDirectory
+            let fileName = "icloud_\(Int(Date().timeIntervalSince1970))_\(url.lastPathComponent)"
+            let localURL = tempDir.appendingPathComponent(fileName)
+            
+            do {
+                // Remove existing temp file if any
+                try? FileManager.default.removeItem(at: localURL)
+                
+                // Use FileManager.default.copyItem for iCloud files
+                // This will handle the download automatically
+                print("Copying iCloud file to local temp directory...")
+                try FileManager.default.copyItem(at: url, to: localURL)
+                workingURL = localURL
+                print("Successfully created local copy at: \(localURL)")
+                
+                // Update filePath to use the local copy
+                filePath = localURL.path
+                print("Updated working file path: \(filePath)")
+            } catch {
+                print("Failed to create local copy of iCloud file: \(error)")
+                
+                // Try alternative approach: read data and write to temp file
+                print("Trying alternative approach: read data directly...")
+                do {
+                    let data = try Data(contentsOf: url)
+                    try data.write(to: localURL)
+                    workingURL = localURL
+                    filePath = localURL.path
+                    print("Successfully created local copy using data approach at: \(localURL)")
+                } catch {
+                    print("Alternative approach also failed: \(error)")
+                    DispatchQueue.main.async {
+                        self.manager.showErrorAlert(message: "Cannot copy iCloud file. The file may not be fully downloaded. Please ensure it's available offline and try again.")
+                    }
+                    return
+                }
+            }
+        }
+        
+        // Check if file exists before trying to load
+        let fileExists = FileManager.default.fileExists(atPath: filePath)
+        print("File exists at path: \(fileExists)")
+        
+        if !fileExists {
+            DispatchQueue.main.async {
+                self.manager.showErrorAlert(message: "Selected file does not exist or cannot be accessed.")
+            }
+            return
+        }
+        
+        // Check file size using the correct path
+        do {
+            let fileAttributes = try FileManager.default.attributesOfItem(atPath: filePath)
+            let fileSize = fileAttributes[.size] as? Int64 ?? 0
+            print("File size: \(fileSize) bytes")
+            
+            if fileSize == 0 {
+                DispatchQueue.main.async {
+                    self.manager.showErrorAlert(message: "Selected file is empty or corrupted.")
+                }
+                return
+            }
+        } catch {
+            print("Failed to get file attributes: \(error)")
+        }
+        
+        // Try to load audio info using the working URL (local copy for iCloud files)
+        manager.loadAudioInfo(from: workingURL)
     }
     
     func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-        // Handle cancellation
-        // The picker will dismiss itself automatically
+        print("Document picker was cancelled")
+    }
+    
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocument url: URL) {
+        print("Document picker selected single document: \(url)")
+        manager.loadAudioInfo(from: url)
     }
 }
 

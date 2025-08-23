@@ -57,6 +57,10 @@ struct AudioLooperView: View {
             Spacer()
         }
         .padding()
+        .onAppear {
+            // Load saved audio files when the view appears
+            audioLooperManager.loadSavedAudioFiles()
+        }
         .fullScreenCover(isPresented: $showPurchaseView) {
             PurchaseView(isPresented: $showPurchaseView)
                 .environmentObject(purchaseModel)
@@ -523,6 +527,17 @@ struct AudioLooperView: View {
            let window = windowScene.windows.first {
             window.rootViewController?.present(activityVC, animated: true)
         }
+    }
+    
+    private func formatFileDate(_ url: URL) -> String {
+        guard let creationDate = (try? url.resourceValues(forKeys: [.creationDateKey]).creationDate) else {
+            return "Unknown date"
+        }
+        
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        return formatter.string(from: creationDate)
     }
 }
 

@@ -128,15 +128,15 @@ struct AudioPreviewView: View {
         VStack(spacing: 16) {
             // Audio Waveform Visualization
             VStack(spacing: 12) {
-                HStack {
-                    Image(systemName: "waveform")
-                        .font(.title2)
-                        .foregroundColor(.blue)
-                    Text(NSLocalizedString("audio_preview", comment: "Audio preview title"))
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                    Spacer()
-                }
+//                HStack {
+//                    Image(systemName: "waveform")
+//                        .font(.title2)
+//                        .foregroundColor(.blue)
+//                    Text(NSLocalizedString("audio_preview", comment: "Audio preview title"))
+//                        .font(.headline)
+//                        .foregroundColor(.primary)
+//                    Spacer()
+//                }
                 
                 // Audio waveform placeholder
                 RoundedRectangle(cornerRadius: 8)

@@ -7,7 +7,7 @@
 */
 
 // App Name
-"audio_looper" = "音頻循環器";
+"audio_looper" = "音頻循環";
 
 // Main Screen
 "select_audio_file" = "選擇音頻檔案";
@@ -87,7 +87,7 @@
 "select_audio_format" = "選擇音頻格式";
 "choose_audio_format_description" = "選擇生成音頻檔案的格式";
 "extract_audio" = "提取音頻";
-"mp3_format_description" = "相容的M4A格式（iOS限制）";
+"mp3_format_description" = "相容的M4A格式";
 "m4a_format_description" = "蘋果格式，音質好相容性強";
 "wav_format_description" = "無壓縮格式，音質最高";
 "aac_format_description" = "先進壓縮，音質優秀";

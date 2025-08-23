@@ -63,6 +63,8 @@
 "photo_library_permission_message" = "Please allow access to your photo library in Settings to select audio and video files for looping.";
 "settings" = "Settings";
 "failed_to_load_audio" = "Failed to load audio information. Please try selecting another file.";
+"failed_to_load_audio_detailed" = "Failed to load audio: %@";
+"file_not_found" = "File not found";
 
 // Features (Onboarding)
 "loop_audios_custom_count" = "Loop Audio with Custom Count";
@@ -98,7 +100,7 @@
 "select_audio_format" = "Select Audio Format";
 "choose_audio_format_description" = "Choose the format for your generated audio file";
 "extract_audio" = "Extract Audio";
-"mp3_format_description" = "Compatible M4A format (iOS limitation)";
+"mp3_format_description" = "Compatible M4A format";
 "m4a_format_description" = "Apple's format, good quality and compatibility";
 "wav_format_description" = "Uncompressed format, highest quality";
 "aac_format_description" = "Advanced compression, excellent quality";
