@@ -1,0 +1,11 @@
+/* 
+  InfoPlist.strings
+  VideoLooper
+  English
+
+  Created by VideoLooper App.
+*/
+
+// App Display Name
+"CFBundleDisplayName" = "Audio Looper";
+"CFBundleName" = "Audio Looper";

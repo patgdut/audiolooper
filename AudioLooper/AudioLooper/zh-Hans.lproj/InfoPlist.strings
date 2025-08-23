@@ -1,0 +1,11 @@
+/* 
+  InfoPlist.strings
+  VideoLooper
+  简体中文
+
+  Created by VideoLooper App.
+*/
+
+// App Display Name
+"CFBundleDisplayName" = "音频循环";
+"CFBundleName" = "音频循环";

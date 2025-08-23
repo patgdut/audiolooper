@@ -1,0 +1,93 @@
+/* 
+  Localizable.strings
+  VideoLooper
+  繁體中文
+
+  Created by VideoLooper App.
+*/
+
+// App Name
+"audio_looper" = "音頻循環器";
+
+// Main Screen
+"select_audio_file" = "選擇音頻檔案";
+"choose_from_library" = "從媒體庫選擇";
+"browse_files" = "瀏覽檔案";
+"audio_preview" = "音頻預覽";
+
+// Audio Info
+"duration" = "時長";
+"selected_duration" = "選中時長";
+"loop_count" = "循環次數";
+"time" = "次";
+"times" = "次";
+
+// Actions
+"clear" = "清除";
+"loop_audio" = "循環音頻";
+"generate_audio" = "生成音頻";
+"cancel" = "取消";
+
+// Status Messages
+"video_loaded_successfully" = "影片載入成功";
+"creating_loop" = "正在建立第 %d/%d 個循環...";
+"preparing_video_loop" = "正在準備影片循環建立...";
+"creating_looped_video" = "正在建立循環影片...";
+"exporting_looped_video" = "正在匯出循環影片...";
+
+// Limitations
+"free_users_loop_limit" = "免費用戶最多可以循環3次";
+"free_users_limited_3_loops" = "免費用戶限制為3次循環。升級以移除此限制。";
+"free_users_limited_3_loops_max" = "免費用戶最多限制為3次循環";
+
+// Premium
+"premium_feature" = "進階功能";
+"upgrade" = "升級";
+"manage_subscription" = "管理訂閱";
+"upgrade_premium" = "升級進階版";
+"premium_subscription_required" = "此功能需要進階訂閱。升級以解鎖無限影片循環。";
+
+// Errors
+"error" = "錯誤";
+"ok" = "確定";
+"loop_creation_failed" = "循環建立失敗：%@";
+"no_video_selected" = "未選擇影片檔案";
+"failed_to_create_composition" = "建立影片合成失敗";
+"no_video_track_found" = "在選中檔案中未找到影片軌道";
+"failed_to_create_export_session" = "建立匯出工作階段失敗";
+"video_loop_creation_failed" = "影片循環建立失敗";
+"video_loop_creation_cancelled" = "影片循環建立已取消";
+
+// Permissions
+"photo_library_access_required" = "需要相簿存取權限";
+"photo_library_permission_message" = "請在設定中允許存取您的相簿，以便選擇影片進行循環。";
+"settings" = "設定";
+
+// Features (Onboarding)
+"loop_videos_custom_count" = "自定義循環次數影片";
+"loop_videos_custom_count_desc" = "建立可重複播放指定次數的影片";
+"time_range_selection" = "時間範圍選擇";
+"time_range_selection_desc" = "為您的影片循環選擇精確的開始和結束時間";
+"high_quality_export" = "高品質匯出";
+"high_quality_export_desc" = "以高清MP4格式匯出循環影片";
+"premium_unlimited_loops" = "進階版無限循環";
+"premium_unlimited_loops_desc" = "進階用戶可以建立無限次數的循環";
+
+// Video Preview
+"video_preview_title" = "影片預覽";
+"play_video" = "播放影片";
+"share_video" = "分享影片";
+"done" = "完成";
+
+"week" = "周";
+"year" = "年";
+
+// Audio Format Selection
+"output_format" = "輸出格式";
+"select_audio_format" = "選擇音頻格式";
+"choose_audio_format_description" = "選擇生成音頻檔案的格式";
+"extract_audio" = "提取音頻";
+"mp3_format_description" = "相容的M4A格式（iOS限制）";
+"m4a_format_description" = "蘋果格式，音質好相容性強";
+"wav_format_description" = "無壓縮格式，音質最高";
+"aac_format_description" = "先進壓縮，音質優秀";

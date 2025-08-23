@@ -1,0 +1,144 @@
+/* 
+  Localizable.strings
+  VideoLooper
+  简体中文
+
+  Created by VideoLooper App.
+*/
+
+// App Name
+"audio_looper" = "音频循环器";
+
+// Main Screen
+"select_audio_file" = "选择音频文件";
+"choose_from_library" = "从媒体库选择";
+"browse_files" = "浏览文件";
+"audio_preview" = "音频预览";
+
+// Audio Info
+"duration" = "时长";
+"selected_duration" = "选中时长";
+"loop_count" = "循环次数";
+"time" = "次";
+"times" = "次";
+
+// Actions
+"clear" = "清除";
+"loop_audio" = "循环音频";
+"generate_audio" = "生成音频";
+"cancel" = "取消";
+
+// Status Messages
+"audio_loaded_successfully" = "音频加载成功";
+"creating_loop" = "正在创建第 %d/%d 个循环...";
+"preparing_audio_loop" = "正在准备音频循环创建...";
+"creating_looped_audio" = "正在创建循环音频...";
+"exporting_looped_audio" = "正在导出循环音频...";
+
+// Limitations
+"free_users_loop_limit" = "免费用户最多可以循环3次";
+"free_users_limited_3_loops" = "免费用户限制为3次循环。升级以移除此限制。";
+"free_users_limited_3_loops_max" = "免费用户最多限制为3次循环";
+
+// Premium
+"premium_feature" = "高级功能";
+"upgrade" = "升级";
+"manage_subscription" = "管理订阅";
+"upgrade_premium" = "升级高级版";
+"premium_subscription_required" = "此功能需要高级订阅。升级以解锁无限音频循环。";
+
+// Errors
+"error" = "错误";
+"ok" = "确定";
+"loop_creation_failed" = "循环创建失败：%@";
+"no_audio_selected" = "未选择音频文件";
+"select_valid_audio_or_video" = "请选择一个有效的音频或视频文件。";
+"failed_to_create_composition" = "创建音频合成失败";
+"no_audio_track_found" = "在选中文件中未找到音频轨道";
+"failed_to_create_export_session" = "创建导出会话失败";
+"audio_loop_creation_failed" = "音频循环创建失败";
+"audio_loop_creation_cancelled" = "音频循环创建已取消";
+
+// Permissions
+"photo_library_access_required" = "需要相册访问权限";
+"photo_library_permission_message" = "请在设置中允许访问您的媒体库，以便选择音频或视频文件进行循环。";
+"settings" = "设置";
+"failed_to_load_audio" = "加载音频信息失败。请尝试选择其他文件。";
+
+// Features (Onboarding)
+"loop_audios_custom_count" = "自定义循环次数音频";
+"loop_audios_custom_count_desc" = "创建可重复播放指定次数的音频循环";
+"time_range_selection" = "时间范围选择";
+"time_range_selection_desc" = "为您的音频循环选择精确的开始和结束时间";
+"high_quality_export" = "高质量导出";
+"high_quality_export_desc" = "以高质量M4A格式导出循环音频";
+"premium_unlimited_loops" = "高级版无限循环";
+"premium_unlimited_loops_desc" = "高级用户可以创建无限次数的循环";
+
+// Audio Preview
+"audio_preview_title" = "音频预览";
+"play_audio" = "播放音频";
+"pause_audio" = "暂停音频";
+"share_audio" = "分享音频";
+"done" = "完成";
+
+// Onboarding
+"welcome_to_app" = "欢迎使用 %@";
+"continue_button" = "继续";
+
+// Video Player
+"start" = "开始";
+"end" = "结束";
+"select_time_range" = "选择时间范围";
+"start_time" = "开始时间";
+"current_time" = "当前时间";
+"end_time" = "结束时间";
+
+// Audio Format Selection
+"output_format" = "输出格式";
+"select_audio_format" = "选择音频格式";
+"choose_audio_format_description" = "选择生成音频文件的格式";
+"extract_audio" = "提取音频";
+"mp3_format_description" = "兼容的M4A格式（iOS限制）";
+"m4a_format_description" = "苹果格式，音质好兼容性强";
+"wav_format_description" = "无压缩格式，音质最高";
+"aac_format_description" = "先进压缩，音质优秀";
+
+// Rating Alert
+"rating_alert_title" = "您喜欢这个应用吗？";
+"love_it_button" = "我很喜欢！";
+"maybe_later_button" = "稍后再说";
+"rating_alert_message" = "如果您喜欢使用这个应用，我们很想听到您的声音！您的反馈有助于我们改进应用。";
+
+// Support Email
+"support_email_subject" = "音频循环器应用支持";
+"support_email_body" = "您好，\n\n我需要关于音频循环器应用的帮助。\n\n";
+"contact_support_message" = "请联系我们：\nhi@coolappbox.com";
+
+// Purchase View
+"unlock_premium_access" = "解锁高级访问权限";
+"free_trial_enabled" = "免费试用已启用";
+"family_sharing_enabled" = "已启用家庭共享";
+"restore_purchases" = "恢复购买";
+"restore_purchase" = "恢复购买";
+"no_purchases_restored" = "未恢复任何购买";
+"view_terms_conditions" = "查看条款和条件";
+"terms_of_use" = "使用条款";
+"privacy_policy" = "隐私政策";
+"unlimited_duration" = "无限时长";
+"all_audio_formats" = "所有音频格式";
+"fast_processing" = "快速处理";
+"save_percent" = "节省 %d%%";
+"yearly_plan" = "年度计划";
+"three_day_trial" = "3天免费试用";
+"ad_free_experience" = "无广告体验";
+"terms_privacy_policy" = "使用条款和隐私政策";
+"then_price_per_duration" = "然后 %@ 每 %@";
+"price_per_duration" = "%@ 每 %@";
+
+// Preview Placeholders
+"audio_preview_component" = "音频预览组件";
+"need_audio_url_preview" = "需要真实的音频URL进行预览";
+
+"week" = "周";
+"year" = "年";

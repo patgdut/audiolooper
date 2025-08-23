@@ -1,0 +1,143 @@
+/* 
+  Localizable.strings
+  VideoLooper
+
+  Created by VideoLooper App.
+*/
+
+// App Name
+"audio_looper" = "Audio Looper";
+
+// Main Screen
+"select_audio_file" = "Select Audio File";
+"choose_from_library" = "Choose from Library";
+"browse_files" = "Browse Files";
+"audio_preview" = "Audio Preview";
+
+// Audio Info
+"duration" = "Duration";
+"selected_duration" = "Selected Duration";
+"loop_count" = "Loop Count";
+"time" = "time";
+"times" = "times";
+
+// Actions
+"clear" = "Clear";
+"loop_audio" = "Loop Audio";
+"generate_audio" = "Generate Audio";
+"cancel" = "Cancel";
+
+// Status Messages
+"audio_loaded_successfully" = "Audio loaded successfully";
+"creating_loop" = "Creating loop %d of %d...";
+"preparing_audio_loop" = "Preparing audio loop creation...";
+"creating_looped_audio" = "Creating looped audio...";
+"exporting_looped_audio" = "Exporting looped audio...";
+
+// Limitations
+"free_users_loop_limit" = "Free users can loop audios up to 3 times";
+"free_users_limited_3_loops" = "Free users are limited to 3 loops. Upgrade to remove this limit.";
+"free_users_limited_3_loops_max" = "Free users are limited to 3 loops maximum";
+
+// Premium
+"premium_feature" = "Premium Feature";
+"upgrade" = "Upgrade";
+"manage_subscription" = "Manage Subscription";
+"upgrade_premium" = "Upgrade Premium";
+"premium_subscription_required" = "This feature requires a premium subscription. Upgrade to unlock unlimited audio looping.";
+
+// Errors
+"error" = "Error";
+"ok" = "OK";
+"loop_creation_failed" = "Loop creation failed: %@";
+"no_audio_selected" = "No audio file selected";
+"select_valid_audio_or_video" = "Please select a valid audio or video file.";
+"failed_to_create_composition" = "Failed to create audio composition";
+"no_audio_track_found" = "No audio track found in selected file";
+"failed_to_create_export_session" = "Failed to create export session";
+"audio_loop_creation_failed" = "Audio loop creation failed";
+"audio_loop_creation_cancelled" = "Audio loop creation was cancelled";
+
+// Permissions
+"photo_library_access_required" = "Photo Library Access Required";
+"photo_library_permission_message" = "Please allow access to your photo library in Settings to select audio and video files for looping.";
+"settings" = "Settings";
+"failed_to_load_audio" = "Failed to load audio information. Please try selecting another file.";
+
+// Features (Onboarding)
+"loop_audios_custom_count" = "Loop Audio with Custom Count";
+"loop_audios_custom_count_desc" = "Create audio loops that repeat with your specified loop count";
+"time_range_selection" = "Time Range Selection";
+"time_range_selection_desc" = "Choose exact start and end times for your audio loops";
+"high_quality_export" = "High Quality Export";
+"high_quality_export_desc" = "Export looped audio in high quality M4A format";
+"premium_unlimited_loops" = "Premium Unlimited Loops";
+"premium_unlimited_loops_desc" = "Premium users can create unlimited loop counts";
+
+// Audio Preview
+"audio_preview_title" = "Audio Preview";
+"play_audio" = "Play Audio";
+"pause_audio" = "Pause Audio";
+"share_audio" = "Share Audio";
+"done" = "Done";
+
+// Onboarding
+"welcome_to_app" = "Welcome to %@";
+"continue_button" = "Continue";
+
+// Video Player
+"start" = "Start";
+"end" = "End";
+"select_time_range" = "Select Time Range";
+"start_time" = "Start Time";
+"current_time" = "Current Time";
+"end_time" = "End Time";
+
+// Audio Format Selection
+"output_format" = "Output Format";
+"select_audio_format" = "Select Audio Format";
+"choose_audio_format_description" = "Choose the format for your generated audio file";
+"extract_audio" = "Extract Audio";
+"mp3_format_description" = "Compatible M4A format (iOS limitation)";
+"m4a_format_description" = "Apple's format, good quality and compatibility";
+"wav_format_description" = "Uncompressed format, highest quality";
+"aac_format_description" = "Advanced compression, excellent quality";
+
+// Rating Alert
+"rating_alert_title" = "Do you like this app?";
+"love_it_button" = "I love it!";
+"maybe_later_button" = "Maybe later";
+"rating_alert_message" = "If you enjoy using this app, we'd love to hear from you! Your feedback helps us improve the app.";
+
+// Support Email
+"support_email_subject" = "Audio Looper App Support";
+"support_email_body" = "Hi,\n\nI need help with the Audio Looper app.\n\n";
+"contact_support_message" = "Please contact us at:\nhi@coolappbox.com";
+
+// Purchase View
+"unlock_premium_access" = "Unlock Premium Access";
+"free_trial_enabled" = "Free Trial Enabled";
+"family_sharing_enabled" = "Family Sharing enabled";
+"restore_purchases" = "Restore Purchases";
+"restore_purchase" = "Restore Purchase";
+"no_purchases_restored" = "No purchases restored";
+"view_terms_conditions" = "View Terms & Conditions";
+"terms_of_use" = "Terms of Use";
+"privacy_policy" = "Privacy Policy";
+"unlimited_duration" = "Unlimited Duration";
+"all_audio_formats" = "All Audio Formats";
+"fast_processing" = "Fast Processing";
+"save_percent" = "SAVE %d%%";
+"yearly_plan" = "Yearly Plan";
+"three_day_trial" = "3-Day Trial";
+"ad_free_experience" = "Ad-Free Experience";
+"terms_privacy_policy" = "Terms of Use & Privacy Policy";
+"then_price_per_duration" = "then %@ per %@";
+"price_per_duration" = "%@ per %@";
+
+// Preview Placeholders
+"audio_preview_component" = "Audio Preview Component";
+"need_audio_url_preview" = "Need real audio URL for preview";
+
+"week" = "week";
+"year" = "year";
