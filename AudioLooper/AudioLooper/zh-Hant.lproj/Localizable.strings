@@ -143,6 +143,31 @@
 "rating_alert_message" = "如果您喜歡使用這個應用程式，我們很樂意聽到您的意見！您的回饋幫助我們改善應用程式。";
 "support_email_subject" = "Audio Looper App 支援";
 "support_email_body" = "您好，\n\n我需要Audio Looper應用程式的協助。\n\n";
+
+// Network Transfer
+"network_transfer" = "網路傳輸";
+"network_server_running" = "伺服器運行中";
+"network_server_stopped" = "伺服器已停止";
+"network_starting_server" = "正在啟動網路伺服器...";
+"network_ready_receive" = "準備接收來自電腦的檔案";
+"network_local_ip" = "本機IP位址";
+"network_port" = "連接埠";
+"network_web_address" = "網頁位址";
+"network_detecting" = "偵測中...";
+"network_connected_devices" = "已連接裝置";
+"network_receiving_file" = "正在接收檔案...";
+"network_transfer_instructions" = "檔案傳輸步驟";
+"network_instruction_step1" = "確保您的電腦和手機連接在同一個Wi-Fi網路";
+"network_instruction_step2" = "在電腦上開啟網頁瀏覽器，訪問上方顯示的網頁位址";
+"network_instruction_step3" = "在網頁上選擇並上傳您的音頻檔案";
+"network_transfer_info_title" = "網路傳輸資訊";
+"network_transfer_info_message" = "此功能允許您透過本機Wi-Fi網路將音頻檔案從電腦傳輸到手機。兩台裝置必須連接到同一網路。";
+"network_server_start_failed" = "啟動網路伺服器失敗";
+"network_invalid_file_data" = "接收到無效的檔案資料";
+"network_unsupported_file_type" = "不支援的音頻檔案類型";
+"network_unavailable" = "網路不可用";
+"network_file_write_failed" = "寫入檔案失敗";
+"info" = "資訊";
 "contact_support_message" = "請聯絡我們：\nhi@coolappbox.com";
 "unlock_premium_access" = "解鎖高級存取";
 "free_trial_enabled" = "已啟用免費試用";

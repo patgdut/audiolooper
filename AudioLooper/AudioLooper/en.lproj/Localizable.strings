@@ -185,3 +185,28 @@
 "tap_record_instruction" = "Tap the record button to start recording";
 "recording_limit_instruction" = "You can record up to 10 minutes of audio";
 "microphone_settings_message" = "Please allow microphone access in Settings to record audio.";
+
+// Network Transfer
+"network_transfer" = "Network Transfer";
+"network_server_running" = "Server Running";
+"network_server_stopped" = "Server Stopped";
+"network_starting_server" = "Starting network server...";
+"network_ready_receive" = "Ready to receive files from your computer";
+"network_local_ip" = "Local IP Address";
+"network_port" = "Port";
+"network_web_address" = "Web Address";
+"network_detecting" = "Detecting...";
+"network_connected_devices" = "Connected Devices";
+"network_receiving_file" = "Receiving file...";
+"network_transfer_instructions" = "How to Transfer Files";
+"network_instruction_step1" = "Make sure your computer and phone are on the same Wi-Fi network";
+"network_instruction_step2" = "Open a web browser on your computer and visit the web address shown above";
+"network_instruction_step3" = "Select and upload your audio files from the web page";
+"network_transfer_info_title" = "Network Transfer Info";
+"network_transfer_info_message" = "This feature allows you to transfer audio files from your computer to your phone through your local Wi-Fi network. Both devices must be connected to the same network.";
+"network_server_start_failed" = "Failed to start network server";
+"network_invalid_file_data" = "Invalid file data received";
+"network_unsupported_file_type" = "Unsupported audio file type";
+"network_unavailable" = "Network unavailable";
+"network_file_write_failed" = "Failed to write file";
+"info" = "Info";

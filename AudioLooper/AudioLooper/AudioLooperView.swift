@@ -19,6 +19,7 @@ struct AudioLooperView: View {
     @State private var showingFormatPicker = false
     @State private var showingMusicLibrary = false
     @State private var showingRecording = false
+    @State private var showingNetworkTransfer = false
     
     var body: some View {
         VStack(spacing: 20) {
@@ -116,6 +117,11 @@ struct AudioLooperView: View {
         }
         .sheet(isPresented: $showingRecording) {
             RecordingView { audioURL in
+                audioLooperManager.loadAudio(from: audioURL)
+            }
+        }
+        .sheet(isPresented: $showingNetworkTransfer) {
+            NetworkTransferView { audioURL in
                 audioLooperManager.loadAudio(from: audioURL)
             }
         }
@@ -263,6 +269,26 @@ struct AudioLooperView: View {
                     .foregroundColor(.red)
                     .padding()
                     .background(Color.red.opacity(0.1))
+                    .cornerRadius(12)
+                }
+                .buttonStyle(PlainButtonStyle())
+                
+                Button(action: {
+                    showingNetworkTransfer = true
+                }) {
+                    HStack {
+                        Image(systemName: "wifi.router")
+                            .font(.title2)
+                        Text(NSLocalizedString("network_transfer", comment: "Network transfer button"))
+                            .font(.headline)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .foregroundColor(.orange)
+                    .padding()
+                    .background(Color.orange.opacity(0.1))
                     .cornerRadius(12)
                 }
                 .buttonStyle(PlainButtonStyle())
