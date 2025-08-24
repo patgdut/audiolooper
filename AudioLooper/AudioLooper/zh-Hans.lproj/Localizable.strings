@@ -142,3 +142,45 @@
 
 "week" = "周";
 "year" = "年";
+
+// Music Library
+"import_from_music_library" = "从音乐库导入";
+"music_library" = "音乐库";
+"music_library_access" = "音乐库访问";
+"music_library_access_message" = "要从您的音乐库导入音乐，请允许访问媒体与Apple Music。";
+"request_access" = "请求访问";
+"loading_music_library" = "正在加载音乐库...";
+"no_compatible_music_found" = "未找到兼容的音乐";
+"only_non_drm_music_info" = "只能导入无DRM保护的音乐：";
+"music_purchased_itunes" = "从iTunes Store购买的音乐";
+"music_imported_cds" = "从CD导入的音乐";
+"drm_free_audio_files" = "无DRM的音频文件";
+"refresh_library" = "刷新音乐库";
+"search_music" = "搜索音乐...";
+"unknown_title" = "未知标题";
+"import" = "导入";
+"refresh" = "刷新";
+"export_error" = "导出错误";
+"authorization_required" = "需要授权";
+"invalid_audio_url" = "无效的音频URL";
+"protected_content_error" = "此音频文件受保护，无法导出";
+"export_session_failed" = "创建导出会话失败";
+"export_failed" = "音频导出失败";
+"export_cancelled" = "音频导出已取消";
+"unknown_error" = "导出过程中发生未知错误";
+"settings_access_message" = "请在设置中允许访问媒体与Apple Music以从您的音乐库导入音乐。";
+
+// Recording
+"record_audio" = "录制音频";
+"microphone_access_required" = "需要麦克风访问权限";
+"microphone_permission_message" = "要录制音频，请允许此应用访问麦克风。";
+"recording" = "正在录制...";
+"recording_completed" = "录制完成";
+"preview" = "预览";
+"record" = "录制";
+"stop" = "停止";
+"delete" = "删除";
+"use_recording" = "使用录音";
+"tap_record_instruction" = "点击录制按钮开始录音";
+"recording_limit_instruction" = "您可以录制最长10分钟的音频";
+"microphone_settings_message" = "请在设置中允许麦克风访问以录制音频。";

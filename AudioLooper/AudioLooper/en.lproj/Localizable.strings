@@ -143,3 +143,45 @@
 
 "week" = "week";
 "year" = "year";
+
+// Music Library
+"import_from_music_library" = "Import from Music Library";
+"music_library" = "Music Library";
+"music_library_access" = "Music Library Access";
+"music_library_access_message" = "To import music from your library, please allow access to Media & Apple Music.";
+"request_access" = "Request Access";
+"loading_music_library" = "Loading Music Library...";
+"no_compatible_music_found" = "No Compatible Music Found";
+"only_non_drm_music_info" = "Only non-DRM protected music can be imported:";
+"music_purchased_itunes" = "Music purchased from iTunes Store";
+"music_imported_cds" = "Music imported from CDs";
+"drm_free_audio_files" = "DRM-free audio files";
+"refresh_library" = "Refresh Library";
+"search_music" = "Search music...";
+"unknown_title" = "Unknown Title";
+"import" = "Import";
+"refresh" = "Refresh";
+"export_error" = "Export Error";
+"authorization_required" = "Authorization Required";
+"invalid_audio_url" = "Invalid audio URL";
+"protected_content_error" = "This audio file is protected and cannot be exported";
+"export_session_failed" = "Failed to create export session";
+"export_failed" = "Audio export failed";
+"export_cancelled" = "Audio export was cancelled";
+"unknown_error" = "Unknown error occurred during export";
+"settings_access_message" = "Please allow access to Media & Apple Music in Settings to import music from your library.";
+
+// Recording
+"record_audio" = "Record Audio";
+"microphone_access_required" = "Microphone Access Required";
+"microphone_permission_message" = "To record audio, please allow microphone access for this app.";
+"recording" = "Recording...";
+"recording_completed" = "Recording completed";
+"preview" = "Preview";
+"record" = "Record";
+"stop" = "Stop";
+"delete" = "Delete";
+"use_recording" = "Use Recording";
+"tap_record_instruction" = "Tap the record button to start recording";
+"recording_limit_instruction" = "You can record up to 10 minutes of audio";
+"microphone_settings_message" = "Please allow microphone access in Settings to record audio.";

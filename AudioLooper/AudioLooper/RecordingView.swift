@@ -19,11 +19,11 @@ struct RecordingView: View {
                 }
             }
             .padding()
-            .navigationTitle(NSLocalizedString("Record Audio", comment: ""))
+            .navigationTitle(NSLocalizedString("record_audio", comment: ""))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(NSLocalizedString("Cancel", comment: "")) {
+                    Button(NSLocalizedString("cancel", comment: "")) {
                         if recorder.isRecording {
                             recorder.stopRecording()
                         }
@@ -33,7 +33,7 @@ struct RecordingView: View {
                 
                 if let recordingURL = recorder.recordingURL, !recorder.isRecording {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(NSLocalizedString("Use Recording", comment: "")) {
+                        Button(NSLocalizedString("use_recording", comment: "")) {
                             onAudioRecorded(recordingURL)
                             dismiss()
                         }
@@ -48,15 +48,15 @@ struct RecordingView: View {
                     }
                 }
             }
-            .alert("Microphone Access Required", isPresented: $showingPermissionAlert) {
-                Button(NSLocalizedString("Settings", comment: "")) {
+            .alert(NSLocalizedString("microphone_access_required", comment: ""), isPresented: $showingPermissionAlert) {
+                Button(NSLocalizedString("settings", comment: "")) {
                     if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
                         UIApplication.shared.open(settingsUrl)
                     }
                 }
-                Button(NSLocalizedString("Cancel", comment: ""), role: .cancel) {}
+                Button(NSLocalizedString("cancel", comment: ""), role: .cancel) {}
             } message: {
-                Text(NSLocalizedString("Please allow microphone access in Settings to record audio.", comment: ""))
+                Text(NSLocalizedString("microphone_settings_message", comment: ""))
             }
         }
     }
@@ -67,17 +67,17 @@ struct RecordingView: View {
                 .font(.system(size: 80))
                 .foregroundColor(.red)
             
-            Text(NSLocalizedString("Microphone Access Required", comment: ""))
+            Text(NSLocalizedString("microphone_access_required", comment: ""))
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text(NSLocalizedString("To record audio, please allow microphone access for this app.", comment: ""))
+            Text(NSLocalizedString("microphone_permission_message", comment: ""))
                 .font(.body)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
             
-            Button(NSLocalizedString("Request Access", comment: "")) {
+            Button(NSLocalizedString("request_access", comment: "")) {
                 recorder.checkPermission()
                 if !recorder.hasPermission {
                     showingPermissionAlert = true
@@ -125,7 +125,7 @@ struct RecordingView: View {
                             }
                         }
                         
-                        Text(NSLocalizedString("Recording...", comment: ""))
+                        Text(NSLocalizedString("recording", comment: ""))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -139,7 +139,7 @@ struct RecordingView: View {
                     .foregroundColor(recorder.isRecording ? .red : .primary)
                 
                 if !recorder.isRecording && recorder.recordingURL != nil {
-                    Text(NSLocalizedString("Recording completed", comment: ""))
+                    Text(NSLocalizedString("recording_completed", comment: ""))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -155,7 +155,7 @@ struct RecordingView: View {
                         VStack(spacing: 8) {
                             Image(systemName: "play.circle.fill")
                                 .font(.system(size: 40))
-                            Text(NSLocalizedString("Preview", comment: ""))
+                            Text(NSLocalizedString("preview", comment: ""))
                                 .font(.caption)
                         }
                         .foregroundColor(.blue)
@@ -188,8 +188,8 @@ struct RecordingView: View {
                         }
                         
                         Text(recorder.isRecording ? 
-                             NSLocalizedString("Stop", comment: "") : 
-                             NSLocalizedString("Record", comment: ""))
+                             NSLocalizedString("stop", comment: "") : 
+                             NSLocalizedString("record", comment: ""))
                             .font(.caption)
                             .foregroundColor(recorder.isRecording ? .red : .primary)
                     }
@@ -208,7 +208,7 @@ struct RecordingView: View {
                         VStack(spacing: 8) {
                             Image(systemName: "trash.circle.fill")
                                 .font(.system(size: 40))
-                            Text(NSLocalizedString("Delete", comment: ""))
+                            Text(NSLocalizedString("delete", comment: ""))
                                 .font(.caption)
                         }
                         .foregroundColor(.red)
@@ -221,12 +221,12 @@ struct RecordingView: View {
             // Instructions
             if recorder.recordingURL == nil {
                 VStack(spacing: 8) {
-                    Text(NSLocalizedString("Tap the record button to start recording", comment: ""))
+                    Text(NSLocalizedString("tap_record_instruction", comment: ""))
                         .font(.body)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                     
-                    Text(NSLocalizedString("You can record up to 10 minutes of audio", comment: ""))
+                    Text(NSLocalizedString("recording_limit_instruction", comment: ""))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

@@ -208,12 +208,32 @@ struct AudioLooperView: View {
                 .buttonStyle(PlainButtonStyle())
                 
                 Button(action: {
+                    audioLooperManager.selectAudio()
+                }) {
+                    HStack {
+                        Image(systemName: "folder")
+                            .font(.title2)
+                        Text(NSLocalizedString("browse_files", comment: "Browse files button"))
+                            .font(.headline)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .foregroundColor(.green)
+                    .padding()
+                    .background(Color.green.opacity(0.1))
+                    .cornerRadius(12)
+                }
+                .buttonStyle(PlainButtonStyle())
+                
+                Button(action: {
                     showingMusicLibrary = true
                 }) {
                     HStack {
                         Image(systemName: "music.note.list")
                             .font(.title2)
-                        Text(NSLocalizedString("Import from Music Library", comment: "Music library button"))
+                        Text(NSLocalizedString("import_from_music_library", comment: "Music library button"))
                             .font(.headline)
                         Spacer()
                         Image(systemName: "chevron.right")
@@ -233,7 +253,7 @@ struct AudioLooperView: View {
                     HStack {
                         Image(systemName: "mic.fill")
                             .font(.title2)
-                        Text(NSLocalizedString("Record Audio", comment: "Record audio button"))
+                        Text(NSLocalizedString("record_audio", comment: "Record audio button"))
                             .font(.headline)
                         Spacer()
                         Image(systemName: "chevron.right")
@@ -243,26 +263,6 @@ struct AudioLooperView: View {
                     .foregroundColor(.red)
                     .padding()
                     .background(Color.red.opacity(0.1))
-                    .cornerRadius(12)
-                }
-                .buttonStyle(PlainButtonStyle())
-                
-                Button(action: {
-                    audioLooperManager.selectAudio()
-                }) {
-                    HStack {
-                        Image(systemName: "folder")
-                            .font(.title2)
-                        Text(NSLocalizedString("browse_files", comment: "Browse files button"))
-                            .font(.headline)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .foregroundColor(.green)
-                    .padding()
-                    .background(Color.green.opacity(0.1))
                     .cornerRadius(12)
                 }
                 .buttonStyle(PlainButtonStyle())

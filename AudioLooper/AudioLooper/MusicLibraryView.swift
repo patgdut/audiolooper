@@ -39,35 +39,35 @@ struct MusicLibraryView: View {
                     musicListView
                 }
             }
-            .navigationTitle(NSLocalizedString("Music Library", comment: ""))
+            .navigationTitle(NSLocalizedString("music_library", comment: ""))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(NSLocalizedString("Cancel", comment: "")) {
+                    Button(NSLocalizedString("cancel", comment: "")) {
                         dismiss()
                     }
                 }
                 
                 if musicManager.authorizationStatus == .authorized && !musicManager.musicItems.isEmpty {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(NSLocalizedString("Refresh", comment: "")) {
+                        Button(NSLocalizedString("refresh", comment: "")) {
                             musicManager.loadMusicLibrary()
                         }
                     }
                 }
             }
-            .alert("Authorization Required", isPresented: $showingAuthAlert) {
-                Button(NSLocalizedString("Settings", comment: "")) {
+            .alert(NSLocalizedString("authorization_required", comment: ""), isPresented: $showingAuthAlert) {
+                Button(NSLocalizedString("settings", comment: "")) {
                     if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
                         UIApplication.shared.open(settingsUrl)
                     }
                 }
-                Button(NSLocalizedString("Cancel", comment: ""), role: .cancel) {}
+                Button(NSLocalizedString("cancel", comment: ""), role: .cancel) {}
             } message: {
-                Text(NSLocalizedString("Please allow access to Media & Apple Music in Settings to import music from your library.", comment: ""))
+                Text(NSLocalizedString("settings_access_message", comment: ""))
             }
-            .alert("Export Error", isPresented: $showingErrorAlert) {
-                Button(NSLocalizedString("OK", comment: ""), role: .cancel) {}
+            .alert(NSLocalizedString("export_error", comment: ""), isPresented: $showingErrorAlert) {
+                Button(NSLocalizedString("ok", comment: ""), role: .cancel) {}
             } message: {
                 Text(errorMessage)
             }
@@ -80,17 +80,17 @@ struct MusicLibraryView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.blue)
             
-            Text(NSLocalizedString("Music Library Access", comment: ""))
+            Text(NSLocalizedString("music_library_access", comment: ""))
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text(NSLocalizedString("To import music from your library, please allow access to Media & Apple Music.", comment: ""))
+            Text(NSLocalizedString("music_library_access_message", comment: ""))
                 .font(.body)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
                 .padding(.horizontal)
             
-            Button(NSLocalizedString("Request Access", comment: "")) {
+            Button(NSLocalizedString("request_access", comment: "")) {
                 Task {
                     let authorized = await musicManager.requestAuthorization()
                     if authorized {
@@ -110,7 +110,7 @@ struct MusicLibraryView: View {
             ProgressView()
                 .scaleEffect(1.2)
             
-            Text(NSLocalizedString("Loading Music Library...", comment: ""))
+            Text(NSLocalizedString("loading_music_library", comment: ""))
                 .font(.body)
                 .foregroundColor(.secondary)
         }
@@ -122,30 +122,30 @@ struct MusicLibraryView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
             
-            Text(NSLocalizedString("No Compatible Music Found", comment: ""))
+            Text(NSLocalizedString("no_compatible_music_found", comment: ""))
                 .font(.title2)
                 .fontWeight(.semibold)
             
             VStack(alignment: .leading, spacing: 8) {
-                Text(NSLocalizedString("Only non-DRM protected music can be imported:", comment: ""))
+                Text(NSLocalizedString("only_non_drm_music_info", comment: ""))
                     .font(.body)
                     .foregroundColor(.secondary)
                 
-                Text("• " + NSLocalizedString("Music purchased from iTunes Store", comment: ""))
+                Text("• " + NSLocalizedString("music_purchased_itunes", comment: ""))
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
-                Text("• " + NSLocalizedString("Music imported from CDs", comment: ""))
+                Text("• " + NSLocalizedString("music_imported_cds", comment: ""))
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
-                Text("• " + NSLocalizedString("DRM-free audio files", comment: ""))
+                Text("• " + NSLocalizedString("drm_free_audio_files", comment: ""))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
             .padding(.horizontal)
             
-            Button(NSLocalizedString("Refresh Library", comment: "")) {
+            Button(NSLocalizedString("refresh_library", comment: "")) {
                 musicManager.loadMusicLibrary()
             }
             .buttonStyle(.bordered)
@@ -207,7 +207,7 @@ struct SearchBar: View {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.secondary)
             
-            TextField(NSLocalizedString("Search music...", comment: ""), text: $text)
+            TextField(NSLocalizedString("search_music", comment: ""), text: $text)
                 .textFieldStyle(PlainTextFieldStyle())
             
             if !text.isEmpty {
@@ -247,7 +247,7 @@ struct MusicItemRow: View {
             .cornerRadius(8)
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(item.title ?? NSLocalizedString("Unknown Title", comment: ""))
+                Text(item.title ?? NSLocalizedString("unknown_title", comment: ""))
                     .font(.headline)
                     .lineLimit(1)
                 
@@ -297,7 +297,7 @@ struct MusicItemRow: View {
                     .scaleEffect(0.8)
             } else {
                 Button(action: onSelect) {
-                    Text(NSLocalizedString("Import", comment: ""))
+                    Text(NSLocalizedString("import", comment: ""))
                         .font(.caption)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)

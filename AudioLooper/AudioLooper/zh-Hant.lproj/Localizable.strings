@@ -91,3 +91,77 @@
 "m4a_format_description" = "蘋果格式，音質好相容性強";
 "wav_format_description" = "無壓縮格式，音質最高";
 "aac_format_description" = "先進壓縮，音質優秀";
+
+// Music Library
+"import_from_music_library" = "從音樂庫匯入";
+"music_library" = "音樂庫";
+"music_library_access" = "音樂庫存取";
+"music_library_access_message" = "要從您的音樂庫匯入音樂，請允許存取媒體與Apple Music。";
+"request_access" = "請求存取";
+"loading_music_library" = "正在載入音樂庫...";
+"no_compatible_music_found" = "未找到相容的音樂";
+"only_non_drm_music_info" = "只能匯入無DRM保護的音樂：";
+"music_purchased_itunes" = "從iTunes Store購買的音樂";
+"music_imported_cds" = "從CD匯入的音樂";
+"drm_free_audio_files" = "無DRM的音頻檔案";
+"refresh_library" = "重整音樂庫";
+"search_music" = "搜尋音樂...";
+"unknown_title" = "未知標題";
+"import" = "匯入";
+"refresh" = "重整";
+"export_error" = "匯出錯誤";
+"authorization_required" = "需要授權";
+"invalid_audio_url" = "無效的音頻URL";
+"protected_content_error" = "此音頻檔案受保護，無法匯出";
+"export_session_failed" = "建立匯出工作階段失敗";
+"export_failed" = "音頻匯出失敗";
+"export_cancelled" = "音頻匯出已取消";
+"unknown_error" = "匯出過程中發生未知錯誤";
+"settings_access_message" = "請在設定中允許存取媒體與Apple Music以從您的音樂庫匯入音樂。";
+
+// Recording
+"record_audio" = "錄製音頻";
+"microphone_access_required" = "需要麥克風存取權限";
+"microphone_permission_message" = "要錄製音頻，請允許此應用程式存取麥克風。";
+"recording" = "正在錄製...";
+"recording_completed" = "錄製完成";
+"preview" = "預覽";
+"record" = "錄製";
+"stop" = "停止";
+"delete" = "刪除";
+"use_recording" = "使用錄音";
+"tap_record_instruction" = "點擊錄製按鈕開始錄音";
+"recording_limit_instruction" = "您可以錄製最長10分鐘的音頻";
+"microphone_settings_message" = "請在設定中允許麥克風存取以錄製音頻。";
+
+// Additional missing keys
+"week" = "週";
+"year" = "年";
+"rating_alert_title" = "您喜歡這個應用程式嗎？";
+"love_it_button" = "我喜歡！";
+"maybe_later_button" = "稍後再說";
+"rating_alert_message" = "如果您喜歡使用這個應用程式，我們很樂意聽到您的意見！您的回饋幫助我們改善應用程式。";
+"support_email_subject" = "Audio Looper App 支援";
+"support_email_body" = "您好，\n\n我需要Audio Looper應用程式的協助。\n\n";
+"contact_support_message" = "請聯絡我們：\nhi@coolappbox.com";
+"unlock_premium_access" = "解鎖高級存取";
+"free_trial_enabled" = "已啟用免費試用";
+"family_sharing_enabled" = "已啟用家庭共享";
+"restore_purchases" = "恢復購買";
+"restore_purchase" = "恢復購買";
+"no_purchases_restored" = "未恢復任何購買";
+"view_terms_conditions" = "檢視條款與條件";
+"terms_of_use" = "使用條款";
+"privacy_policy" = "隱私政策";
+"unlimited_duration" = "無限時長";
+"all_audio_formats" = "所有音頻格式";
+"fast_processing" = "快速處理";
+"save_percent" = "節省 %d%%";
+"yearly_plan" = "年度方案";
+"three_day_trial" = "3天試用";
+"ad_free_experience" = "無廣告體驗";
+"terms_privacy_policy" = "使用條款與隱私政策";
+"then_price_per_duration" = "然後每%@收費%@";
+"price_per_duration" = "每%@收費%@";
+"audio_preview_component" = "音頻預覽組件";
+"need_audio_url_preview" = "需要真實的音頻URL進行預覽";
