@@ -41,6 +41,12 @@ class NetworkTransferManager: NSObject, ObservableObject {
     private var netService: NetService?
     private let supportedAudioExtensions = ["mp3", "m4a", "wav", "aac", "flac", "aiff"]
     
+    // Security improvements
+    private let maxFileSize: Int64 = 100 * 1024 * 1024 // 100MB
+    private let maxActiveConnections = 5
+    private var activeConnections: Set<String> = []
+    private let fileOperationQueue = DispatchQueue(label: "audiolooper.file.operations", qos: .utility)
+    
     override init() {
         super.init()
         setupListener()
@@ -48,6 +54,20 @@ class NetworkTransferManager: NSObject, ObservableObject {
     
     deinit {
         stopServer()
+        cleanupTemporaryFiles()
+    }
+    
+    private func cleanupTemporaryFiles() {
+        fileOperationQueue.async {
+            let tempDir = FileManager.default.temporaryDirectory
+            if let enumerator = FileManager.default.enumerator(at: tempDir, includingPropertiesForKeys: nil) {
+                for case let fileURL as URL in enumerator {
+                    if fileURL.lastPathComponent.contains("audiolooper") {
+                        try? FileManager.default.removeItem(at: fileURL)
+                    }
+                }
+            }
+        }
     }
     
     // MARK: - Server Management
@@ -63,7 +83,15 @@ class NetworkTransferManager: NSObject, ObservableObject {
             listener = try NWListener(using: params, on: NWEndpoint.Port(rawValue: serverPort) ?? .any)
             
             listener?.newConnectionHandler = { [weak self] connection in
-                self?.handleNewConnection(connection)
+                guard let self = self else { return }
+                
+                // 检查连接数限制
+                guard self.activeConnections.count < self.maxActiveConnections else {
+                    connection.cancel()
+                    return
+                }
+                
+                self.handleNewConnection(connection)
             }
             
             listener?.stateUpdateHandler = { [weak self] state in
@@ -126,20 +154,24 @@ class NetworkTransferManager: NSObject, ObservableObject {
         print("New connection from: \(connection.endpoint)")
         
         connection.stateUpdateHandler = { [weak self] state in
+            guard let self = self else { return }
+            
             switch state {
             case .ready:
                 DispatchQueue.main.async {
                     if let endpoint = connection.endpoint.debugDescription.components(separatedBy: ":").first {
-                        if let strongSelf = self, !strongSelf.connectedDevices.contains(endpoint) {
-                            strongSelf.connectedDevices.append(endpoint)
+                        if !self.connectedDevices.contains(endpoint) {
+                            self.connectedDevices.append(endpoint)
+                            self.activeConnections.insert(endpoint)
                         }
                     }
                 }
-                self?.receiveHTTPRequest(connection)
+                self.receiveHTTPRequest(connection)
             case .failed(_), .cancelled:
                 DispatchQueue.main.async {
                     if let endpoint = connection.endpoint.debugDescription.components(separatedBy: ":").first {
-                        self?.connectedDevices.removeAll { $0 == endpoint }
+                        self.connectedDevices.removeAll { $0 == endpoint }
+                        self.activeConnections.remove(endpoint)
                     }
                 }
             default:
@@ -432,6 +464,12 @@ class NetworkTransferManager: NSObject, ObservableObject {
             self.transferProgress = 0.0
         }
         
+        // 基本的请求大小检查
+        guard request.utf8.count < 10 * 1024 * 1024 else { // 10MB header limit
+            send400Response(to: connection, message: "Request too large")
+            return
+        }
+        
         // Parse multipart form data
         let components = request.components(separatedBy: "\r\n\r\n")
         guard components.count >= 2 else {
@@ -474,11 +512,19 @@ class NetworkTransferManager: NSObject, ObservableObject {
             return
         }
         
+        // 验证文件大小
+        guard Int64(fileData.count) <= maxFileSize else {
+            send400Response(to: connection, message: "File too large (max 100MB)")
+            return
+        }
+        
         // Save file to temporary location
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         
-        do {
-            try fileData.write(to: tempURL)
+        // 使用同步队列进行文件操作
+        fileOperationQueue.sync {
+            do {
+                try fileData.write(to: tempURL)
             
             // Validate it's an audio file
             let asset = AVURLAsset(url: tempURL)
@@ -509,9 +555,12 @@ class NetworkTransferManager: NSObject, ObservableObject {
                 }
             }
             
-        } catch {
-            print("Failed to save file: \(error)")
-            send500Response(to: connection)
+            } catch {
+                print("Failed to save file: \(error)")
+                DispatchQueue.main.async {
+                    self.send500Response(to: connection)
+                }
+            }
         }
     }
     
