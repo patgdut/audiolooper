@@ -230,6 +230,11 @@ class AudioLooperManager: NSObject, ObservableObject {
         }
     }
     
+    func loadAudio(from url: URL) {
+        selectedAudioURL = url
+        loadAudioInfo(from: url)
+    }
+    
     func loadAudioInfo(from url: URL) {
         print("=== Loading Audio Info ===")
         print("URL: \(url)")

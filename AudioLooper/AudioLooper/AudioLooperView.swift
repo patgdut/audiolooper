@@ -17,6 +17,8 @@ struct AudioLooperView: View {
     @State private var showingPreview = false
     @State private var selectedFormat: AudioLooperManager.AudioFormat = .m4a
     @State private var showingFormatPicker = false
+    @State private var showingMusicLibrary = false
+    @State private var showingRecording = false
     
     var body: some View {
         VStack(spacing: 20) {
@@ -107,6 +109,16 @@ struct AudioLooperView: View {
                 } + [.cancel()]
             )
         }
+        .sheet(isPresented: $showingMusicLibrary) {
+            MusicLibraryView { audioURL in
+                audioLooperManager.loadAudio(from: audioURL)
+            }
+        }
+        .sheet(isPresented: $showingRecording) {
+            RecordingView { audioURL in
+                audioLooperManager.loadAudio(from: audioURL)
+            }
+        }
     }
     
     // MARK: - Header View
@@ -191,6 +203,46 @@ struct AudioLooperView: View {
                     .foregroundColor(.blue)
                     .padding()
                     .background(Color.blue.opacity(0.1))
+                    .cornerRadius(12)
+                }
+                .buttonStyle(PlainButtonStyle())
+                
+                Button(action: {
+                    showingMusicLibrary = true
+                }) {
+                    HStack {
+                        Image(systemName: "music.note.list")
+                            .font(.title2)
+                        Text(NSLocalizedString("Import from Music Library", comment: "Music library button"))
+                            .font(.headline)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .foregroundColor(.purple)
+                    .padding()
+                    .background(Color.purple.opacity(0.1))
+                    .cornerRadius(12)
+                }
+                .buttonStyle(PlainButtonStyle())
+                
+                Button(action: {
+                    showingRecording = true
+                }) {
+                    HStack {
+                        Image(systemName: "mic.fill")
+                            .font(.title2)
+                        Text(NSLocalizedString("Record Audio", comment: "Record audio button"))
+                            .font(.headline)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .foregroundColor(.red)
+                    .padding()
+                    .background(Color.red.opacity(0.1))
                     .cornerRadius(12)
                 }
                 .buttonStyle(PlainButtonStyle())
