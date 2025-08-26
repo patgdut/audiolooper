@@ -409,13 +409,8 @@ class AudioLooperManager: NSObject, ObservableObject {
     func setInitialTimeRange(isSubscribed: Bool = false) {
         startTime = 0
         
-        if isSubscribed {
-            // Premium users get full audio by default
-            endTime = audioDuration
-        } else {
-            // Free users limited to 30 seconds
-            endTime = min(audioDuration, 30)
-        }
+        // All users get full audio by default
+        endTime = audioDuration
         
         // Force a range update by slightly modifying the values to trigger UI refresh
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {

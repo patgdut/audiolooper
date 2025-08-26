@@ -14,40 +14,10 @@
             filePath = "AudioLooper/NetworkTransferManager.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "210"
-            endingLineNumber = "210"
+            startingLineNumber = "206"
+            endingLineNumber = "206"
             landmarkName = "receiveMore()"
             landmarkType = "9">
-            <Locations>
-               <Location
-                  uuid = "738171E6-B9A8-4D7E-87DB-11F8B1C82A79 - 221fbcc9ec6eaf1a"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "AudioLooper.NetworkTransferManager.processHTTPRequest(_: Swift.String, connection: Network.NWConnection) -&gt; ()"
-                  moduleName = "AudioLooper.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/pat/Documents/GitHub/audiolooper/AudioLooper/AudioLooper/NetworkTransferManager.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "210"
-                  endingLineNumber = "210">
-               </Location>
-               <Location
-                  uuid = "738171E6-B9A8-4D7E-87DB-11F8B1C82A79 - e7a7aa24b46ce020"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 @Sendable (Swift.Optional&lt;Foundation.Data&gt;, Swift.Optional&lt;Network.NWConnection.ContentContext&gt;, Swift.Bool, Swift.Optional&lt;Network.NWError&gt;) -&gt; () in receiveMore() -&gt; ()"
-                  moduleName = "AudioLooper.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/pat/Documents/GitHub/audiolooper/AudioLooper/AudioLooper/NetworkTransferManager.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "210"
-                  endingLineNumber = "210">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

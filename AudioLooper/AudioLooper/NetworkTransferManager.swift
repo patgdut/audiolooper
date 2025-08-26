@@ -129,11 +129,8 @@ class NetworkTransferManager: NSObject, ObservableObject {
         listener = nil
         netService?.stop()
         netService = nil
-        
-        DispatchQueue.main.async {
-            self.isServerRunning = false
-            self.connectedDevices.removeAll()
-        }
+        self.isServerRunning = false
+        self.connectedDevices.removeAll()
     }
     
     private func setupListener() {
@@ -158,7 +155,8 @@ class NetworkTransferManager: NSObject, ObservableObject {
             
             switch state {
             case .ready:
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
                     if let endpoint = connection.endpoint.debugDescription.components(separatedBy: ":").first {
                         if !self.connectedDevices.contains(endpoint) {
                             self.connectedDevices.append(endpoint)
@@ -168,7 +166,8 @@ class NetworkTransferManager: NSObject, ObservableObject {
                 }
                 self.receiveHTTPRequest(connection)
             case .failed(_), .cancelled:
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
                     if let endpoint = connection.endpoint.debugDescription.components(separatedBy: ":").first {
                         self.connectedDevices.removeAll { $0 == endpoint }
                         self.activeConnections.remove(endpoint)
@@ -923,15 +922,15 @@ class NetworkTransferManager: NSObject, ObservableObject {
             freeifaddrs(ifaddr)
         }
         
-        DispatchQueue.main.async {
-            self.serverIP = address
+        DispatchQueue.main.async { [weak self] in
+            self?.serverIP = address
         }
     }
     
     private func showError(_ message: String) {
-        DispatchQueue.main.async {
-            self.errorMessage = message
-            self.showError = true
+        DispatchQueue.main.async { [weak self] in
+            self?.errorMessage = message
+            self?.showError = true
         }
     }
 }
