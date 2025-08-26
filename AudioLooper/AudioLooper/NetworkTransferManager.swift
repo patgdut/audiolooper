@@ -185,33 +185,79 @@ class NetworkTransferManager: NSObject, ObservableObject {
     // MARK: - HTTP Request Handling
     
     private func receiveHTTPRequest(_ connection: NWConnection) {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 8192) { [weak self] data, _, isComplete, error in
-            if let data = data, !data.isEmpty {
-                let request = String(data: data, encoding: .utf8) ?? ""
-                self?.processHTTPRequest(request, connection: connection)
-            }
-            
-            if !isComplete {
-                self?.receiveHTTPRequest(connection)
+        var receivedData = Data()
+        
+        func receiveMore() {
+            connection.receive(minimumIncompleteLength: 1, maximumLength: 8192) { [weak self] data, _, isComplete, error in
+                guard let self = self else { return }
+                
+                if let data = data, !data.isEmpty {
+                    receivedData.append(data)
+                    
+                    // 检查是否已收到完整的HTTP头部
+                    if let headerEndRange = receivedData.range(of: "\r\n\r\n".data(using: .utf8)!) {
+                        // 获取HTTP头部
+                        let headerData = receivedData[..<headerEndRange.upperBound]
+                        if let headerString = String(data: headerData, encoding: .utf8) {
+                            print("HTTP Request received: \(headerString.prefix(200))...")
+                            self.processHTTPRequest(receivedData, connection: connection)
+                            return
+                        }
+                    }
+                }
+                
+                if !isComplete && receivedData.count < 1024 * 1024 { // 1MB limit for headers
+                    receiveMore()
+                } else if receivedData.count >= 1024 * 1024 {
+                    print("HTTP request too large")
+                    self.send400Response(to: connection, message: "Request too large")
+                }
             }
         }
+        
+        receiveMore()
     }
     
-    private func processHTTPRequest(_ request: String, connection: NWConnection) {
-        let lines = request.components(separatedBy: "\r\n")
-        guard let firstLine = lines.first else { return }
+    private func processHTTPRequest(_ requestData: Data, connection: NWConnection) {
+        // 提取HTTP头部进行解析
+        guard let headerEndRange = requestData.range(of: "\r\n\r\n".data(using: .utf8)!) else {
+            print("No HTTP header end found")
+            send400Response(to: connection)
+            return
+        }
+        
+        let headerData = requestData[..<headerEndRange.lowerBound]
+        guard let headerString = String(data: headerData, encoding: .utf8) else {
+            print("Cannot parse HTTP headers")
+            send400Response(to: connection)
+            return
+        }
+        
+        let lines = headerString.components(separatedBy: "\r\n")
+        guard let firstLine = lines.first else { 
+            print("No HTTP request line found")
+            send400Response(to: connection)
+            return 
+        }
         
         let components = firstLine.components(separatedBy: " ")
-        guard components.count >= 2 else { return }
+        guard components.count >= 2 else { 
+            print("Invalid HTTP request line: \(firstLine)")
+            send400Response(to: connection)
+            return 
+        }
         
         let method = components[0]
         let path = components[1]
         
+        print("HTTP Request: \(method) \(path)")
+        
         if method == "GET" && path == "/" {
             sendWebPage(to: connection)
         } else if method == "POST" && path == "/upload" {
-            handleFileUpload(request, connection: connection)
+            handleFileUpload(requestData, connection: connection)
         } else {
+            print("Unhandled request: \(method) \(path)")
             send404Response(to: connection)
         }
     }
@@ -458,106 +504,187 @@ class NetworkTransferManager: NSObject, ObservableObject {
         """
     }
     
-    private func handleFileUpload(_ request: String, connection: NWConnection) {
+    private func handleFileUpload(_ requestData: Data, connection: NWConnection) {
         DispatchQueue.main.async {
             self.isReceivingFile = true
             self.transferProgress = 0.0
         }
         
-        // 基本的请求大小检查
-        guard request.utf8.count < 10 * 1024 * 1024 else { // 10MB header limit
-            send400Response(to: connection, message: "Request too large")
+        print("Handling file upload, data size: \(requestData.count) bytes")
+        
+        // 提取HTTP头部
+        guard let headerEndRange = requestData.range(of: "\r\n\r\n".data(using: .utf8)!) else {
+            send400Response(to: connection, message: "No HTTP header end found")
             return
         }
         
-        // Parse multipart form data
-        let components = request.components(separatedBy: "\r\n\r\n")
-        guard components.count >= 2 else {
-            send400Response(to: connection)
+        let headerData = requestData[..<headerEndRange.lowerBound]
+        guard let headerString = String(data: headerData, encoding: .utf8) else {
+            send400Response(to: connection, message: "Cannot parse HTTP headers")
             return
         }
         
-        // Extract boundary from Content-Type header
-        let headerPart = components[0]
-        guard let boundaryLine = headerPart.components(separatedBy: "\r\n").first(where: { $0.contains("boundary=") }) else {
-            send400Response(to: connection)
+        // Extract Content-Length and boundary from headers
+        let lines = headerString.components(separatedBy: "\r\n")
+        var contentLength: Int = 0
+        var boundary: String = ""
+        
+        for line in lines {
+            if line.lowercased().hasPrefix("content-length:") {
+                if let length = Int(line.components(separatedBy: ":")[1].trimmingCharacters(in: .whitespacesAndNewlines)) {
+                    contentLength = length
+                }
+            } else if line.lowercased().contains("content-type:") && line.contains("boundary=") {
+                if let boundaryRange = line.range(of: "boundary=") {
+                    boundary = String(line[boundaryRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+            }
+        }
+        
+        print("Content-Length: \(contentLength), Boundary: '\(boundary)'")
+        
+        guard !boundary.isEmpty else {
+            send400Response(to: connection, message: "Missing boundary")
             return
         }
         
-        let boundary = String(boundaryLine.split(separator: "=").last ?? "")
+        guard contentLength > 0 && contentLength <= maxFileSize else {
+            send400Response(to: connection, message: "Invalid content length: \(contentLength)")
+            return
+        }
         
-        // Continue receiving the file data
-        receiveFileData(connection: connection, boundary: boundary, existingData: request.data(using: .utf8) ?? Data())
+        // 检查是否已经接收到完整的数据
+        let bodyStartIndex = headerEndRange.upperBound
+        let receivedBodySize = requestData.count - bodyStartIndex
+        
+        if receivedBodySize >= contentLength {
+            // 已经接收到完整数据，直接处理
+            print("Complete data already received")
+            processMultipartData(requestData, boundary: boundary, connection: connection)
+        } else {
+            // 需要继续接收剩余数据
+            print("Need to receive more data: \(receivedBodySize)/\(contentLength)")
+            continueReceivingFileData(connection: connection, boundary: boundary, expectedLength: contentLength, existingData: requestData)
+        }
     }
     
-    private func receiveFileData(connection: NWConnection, boundary: String, existingData: Data) {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 1024 * 1024) { [weak self] data, _, isComplete, error in
-            var combinedData = existingData
-            if let newData = data {
-                combinedData.append(newData)
-            }
+    private func continueReceivingFileData(connection: NWConnection, boundary: String, expectedLength: Int, existingData: Data) {
+        var receivedData = existingData
+        
+        // 计算需要接收的剩余数据长度
+        guard let headerEndRange = existingData.range(of: "\r\n\r\n".data(using: .utf8)!) else {
+            send400Response(to: connection, message: "Invalid existing data")
+            return
+        }
+        
+        let bodyStartIndex = headerEndRange.upperBound
+        let alreadyReceivedBodySize = existingData.count - bodyStartIndex
+        
+        func receiveChunk() {
+            let totalExpectedSize = bodyStartIndex + expectedLength
+            let remainingBytes = totalExpectedSize - receivedData.count
+            let chunkSize = min(remainingBytes, 64 * 1024) // 64KB chunks
             
-            if isComplete || error != nil {
-                self?.processFileData(combinedData, boundary: boundary, connection: connection)
-            } else {
-                self?.receiveFileData(connection: connection, boundary: boundary, existingData: combinedData)
+            connection.receive(minimumIncompleteLength: 1, maximumLength: chunkSize) { [weak self] data, _, isComplete, error in
+                guard let self = self else { return }
+                
+                if let error = error {
+                    print("Error receiving data: \(error)")
+                    DispatchQueue.main.async {
+                        self.isReceivingFile = false
+                        self.send500Response(to: connection)
+                    }
+                    return
+                }
+                
+                if let data = data {
+                    receivedData.append(data)
+                    
+                    let currentBodySize = receivedData.count - bodyStartIndex
+                    DispatchQueue.main.async {
+                        self.transferProgress = Double(currentBodySize) / Double(expectedLength)
+                    }
+                }
+                
+                let currentBodySize = receivedData.count - bodyStartIndex
+                if currentBodySize >= expectedLength || isComplete {
+                    // Finished receiving, process the data
+                    print("Finished receiving data: \(currentBodySize)/\(expectedLength)")
+                    self.processMultipartData(receivedData, boundary: boundary, connection: connection)
+                } else {
+                    // Continue receiving
+                    receiveChunk()
+                }
             }
         }
+        
+        receiveChunk()
     }
     
-    private func processFileData(_ data: Data, boundary: String, connection: NWConnection) {
+    private func processMultipartData(_ data: Data, boundary: String, connection: NWConnection) {
         // Parse multipart data to extract file
         guard let fileData = extractFileFromMultipart(data, boundary: boundary) else {
-            send400Response(to: connection)
+            DispatchQueue.main.async {
+                self.isReceivingFile = false
+                self.send400Response(to: connection, message: "Failed to parse multipart data")
+            }
             return
         }
         
         // 验证文件大小
         guard Int64(fileData.count) <= maxFileSize else {
-            send400Response(to: connection, message: "File too large (max 100MB)")
+            DispatchQueue.main.async {
+                self.isReceivingFile = false
+                self.send400Response(to: connection, message: "File too large (max 100MB)")
+            }
             return
         }
         
-        // Save file to temporary location
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        // Save file to Documents directory with original filename
+        let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let fileName = extractFileName(from: data, boundary: boundary) ?? "imported_audio_\(Date().timeIntervalSince1970).m4a"
+        let permanentURL = documentsURL.appendingPathComponent(fileName)
         
-        // 使用同步队列进行文件操作
-        fileOperationQueue.sync {
+        // 使用异步队列进行文件操作
+        fileOperationQueue.async {
             do {
-                try fileData.write(to: tempURL)
+                try fileData.write(to: permanentURL)
             
-            // Validate it's an audio file
-            let asset = AVURLAsset(url: tempURL)
-            // Use async method for iOS 16+
-            Task {
-                do {
-                    let tracks = try await asset.loadTracks(withMediaType: .audio)
-                    if tracks.isEmpty {
-                        try? FileManager.default.removeItem(at: tempURL)
-                        DispatchQueue.main.async {
-                            self.send400Response(to: connection, message: "Not a valid audio file")
+                // Validate it's an audio file
+                let asset = AVURLAsset(url: permanentURL)
+                // Use async method for iOS 16+
+                Task {
+                    do {
+                        let tracks = try await asset.loadTracks(withMediaType: .audio)
+                        if tracks.isEmpty {
+                            try? FileManager.default.removeItem(at: permanentURL)
+                            DispatchQueue.main.async {
+                                self.isReceivingFile = false
+                                self.send400Response(to: connection, message: "Not a valid audio file")
+                            }
+                            return
                         }
-                        return
-                    }
-                    
-                    DispatchQueue.main.async {
-                        self.receivedFileURL = tempURL
-                        self.isReceivingFile = false
-                        self.transferProgress = 1.0
-                    }
-                    
-                    self.sendSuccessResponse(to: connection)
-                } catch {
-                    try? FileManager.default.removeItem(at: tempURL)
-                    DispatchQueue.main.async {
-                        self.send500Response(to: connection)
+                        
+                        DispatchQueue.main.async {
+                            self.receivedFileURL = permanentURL
+                            self.isReceivingFile = false
+                            self.transferProgress = 1.0
+                        }
+                        
+                        self.sendSuccessResponse(to: connection)
+                    } catch {
+                        try? FileManager.default.removeItem(at: permanentURL)
+                        DispatchQueue.main.async {
+                            self.isReceivingFile = false
+                            self.send500Response(to: connection)
+                        }
                     }
                 }
-            }
-            
+                
             } catch {
                 print("Failed to save file: \(error)")
                 DispatchQueue.main.async {
+                    self.isReceivingFile = false
                     self.send500Response(to: connection)
                 }
             }
@@ -565,23 +692,146 @@ class NetworkTransferManager: NSObject, ObservableObject {
     }
     
     private func extractFileFromMultipart(_ data: Data, boundary: String) -> Data? {
-        let boundaryData = "--\(boundary)".data(using: .utf8)!
-        let endBoundaryData = "--\(boundary)--".data(using: .utf8)!
+        print("Parsing multipart data, size: \(data.count) bytes")
         
-        guard let startRange = data.range(of: boundaryData) else { return nil }
-        let afterBoundary = data.subdata(in: startRange.upperBound..<data.endIndex)
+        // 查找HTTP头部结束位置（双换行符）
+        let headerEndMarker = "\r\n\r\n".data(using: .utf8)!
+        guard let headerEndRange = data.range(of: headerEndMarker) else {
+            print("Could not find HTTP headers end")
+            return nil
+        }
         
-        // Find double CRLF (end of headers)
-        let doubleCRLF = "\r\n\r\n".data(using: .utf8)!
-        guard let headersEnd = afterBoundary.range(of: doubleCRLF) else { return nil }
+        // 只对HTTP头部进行字符串解析
+        let headerData = data[..<headerEndRange.lowerBound]
+        guard let headerString = String(data: headerData, encoding: .utf8) else {
+            print("Could not parse HTTP headers")
+            return nil
+        }
         
-        let fileDataStart = headersEnd.upperBound
+        print("HTTP Headers parsed successfully")
         
-        // Find end boundary
-        guard let endRange = afterBoundary.range(of: endBoundaryData) else { return nil }
-        let fileDataEnd = endRange.lowerBound - 2 // Remove trailing CRLF
+        // 在HTTP头部查找boundary
+        var parsedBoundary: String?
+        let lines = headerString.components(separatedBy: .newlines)
         
-        return afterBoundary.subdata(in: fileDataStart..<fileDataEnd)
+        for line in lines {
+            if line.contains("boundary=") {
+                let parts = line.components(separatedBy: "boundary=")
+                if parts.count >= 2 {
+                    parsedBoundary = parts[1].components(separatedBy: .whitespacesAndNewlines)[0].trimmingCharacters(in: CharacterSet(charactersIn: "\"';"))
+                    break
+                }
+            }
+        }
+        
+        // 使用传入的boundary或解析出的boundary
+        let useBoundary = parsedBoundary ?? boundary
+        guard !useBoundary.isEmpty else {
+            print("No boundary found in headers")
+            return nil
+        }
+        
+        print("Found boundary: '\(useBoundary)'")
+        
+        // 从HTTP body开始查找multipart数据
+        let bodyStart = headerEndRange.upperBound
+        let bodyData = data[bodyStart...]
+        
+        // 查找第一个boundary
+        let boundaryMarker = "--\(useBoundary)".data(using: .utf8)!
+        guard let firstBoundaryRange = bodyData.range(of: boundaryMarker) else {
+            print("First boundary not found in body")
+            return nil
+        }
+        
+        let afterBoundary = bodyData[firstBoundaryRange.upperBound...]
+        
+        // 查找multipart header结束位置
+        let multipartHeaderEnd = "\r\n\r\n".data(using: .utf8)!
+        guard let multipartHeaderEndRange = afterBoundary.range(of: multipartHeaderEnd) else {
+            print("Multipart header end not found")
+            return nil
+        }
+        
+        let fileStart = multipartHeaderEndRange.upperBound
+        
+        // 查找结束boundary
+        let endBoundary = "\r\n--\(useBoundary)--".data(using: .utf8)!
+        if let endRange = bodyData.range(of: endBoundary, in: fileStart..<bodyData.endIndex) {
+            let fileData = bodyData[fileStart..<endRange.lowerBound]
+            print("Successfully extracted file data: \(fileData.count) bytes")
+            return Data(fileData)
+        } else {
+            // 如果找不到结束boundary，可能是简单的结束标记
+            let simpleBoundary = "\r\n--\(useBoundary)".data(using: .utf8)!
+            if let endRange = bodyData.range(of: simpleBoundary, in: fileStart..<bodyData.endIndex) {
+                let fileData = bodyData[fileStart..<endRange.lowerBound]
+                print("Successfully extracted file data (simple boundary): \(fileData.count) bytes")
+                return Data(fileData)
+            } else {
+                print("Could not find end boundary, using remaining data")
+                let fileData = bodyData[fileStart...]
+                return Data(fileData)
+            }
+        }
+    }
+    
+    private func extractFileName(from data: Data, boundary: String) -> String? {
+        // 查找HTTP头部结束位置（双换行符）
+        let headerEndMarker = "\r\n\r\n".data(using: .utf8)!
+        guard let headerEndRange = data.range(of: headerEndMarker) else { return nil }
+        
+        // 从HTTP body开始查找multipart数据
+        let bodyStart = headerEndRange.upperBound
+        let bodyData = data[bodyStart...]
+        
+        // 在HTTP头部查找boundary（如果需要）
+        let headerData = data[..<headerEndRange.lowerBound]
+        var useBoundary = boundary
+        
+        if let headerString = String(data: headerData, encoding: .utf8) {
+            let lines = headerString.components(separatedBy: .newlines)
+            for line in lines {
+                if line.contains("boundary=") {
+                    let parts = line.components(separatedBy: "boundary=")
+                    if parts.count >= 2 {
+                        useBoundary = parts[1].components(separatedBy: .whitespacesAndNewlines)[0].trimmingCharacters(in: CharacterSet(charactersIn: "\"';"))
+                        break
+                    }
+                }
+            }
+        }
+        
+        // 查找第一个boundary
+        let boundaryMarker = "--\(useBoundary)".data(using: .utf8)!
+        guard let firstBoundaryRange = bodyData.range(of: boundaryMarker) else { return nil }
+        
+        let afterBoundary = bodyData[firstBoundaryRange.upperBound...]
+        
+        // 查找multipart header结束位置
+        let multipartHeaderEnd = "\r\n\r\n".data(using: .utf8)!
+        guard let multipartHeaderEndRange = afterBoundary.range(of: multipartHeaderEnd) else { return nil }
+        
+        // 获取multipart headers
+        let multipartHeadersData = afterBoundary[..<multipartHeaderEndRange.lowerBound]
+        guard let multipartHeaders = String(data: multipartHeadersData, encoding: .utf8) else { return nil }
+        
+        // Find filename in Content-Disposition header
+        let lines = multipartHeaders.components(separatedBy: .newlines)
+        for line in lines {
+            if line.lowercased().contains("content-disposition") && line.contains("filename=") {
+                // Extract filename from: filename="example.mp3"
+                if let range = line.range(of: "filename=\"") {
+                    let afterFilename = String(line[range.upperBound...])
+                    if let endQuote = afterFilename.firstIndex(of: "\"") {
+                        let fileName = String(afterFilename[..<endQuote])
+                        return fileName.isEmpty ? nil : fileName
+                    }
+                }
+            }
+        }
+        
+        return nil
     }
     
     // MARK: - HTTP Responses
