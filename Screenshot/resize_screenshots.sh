@@ -99,8 +99,8 @@ IPHONE_DIR="$SCRIPT_DIR/iPhone"
 IPAD_DIR="$SCRIPT_DIR/iPad"
 
 # iPhone screenshots: 2688×1242px (iPhone 14 Pro Max landscape)
-IPHONE_WIDTH=2688
-IPHONE_HEIGHT=1242
+IPHONE_WIDTH=1242
+IPHONE_HEIGHT=2688
 
 # iPad screenshots: 2048×2732px (iPad Pro 12.9" portrait)
 IPAD_WIDTH=2048
