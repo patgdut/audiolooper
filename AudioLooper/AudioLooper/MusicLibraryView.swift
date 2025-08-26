@@ -13,6 +13,7 @@ struct MusicLibraryView: View {
     @State private var exportingItem: MPMediaItem?
     @State private var showingErrorAlert = false
     @State private var errorMessage = ""
+    @State private var protectionStatusCache: [MPMediaEntityPersistentID: Bool] = [:]
     
     var filteredItems: [MPMediaItem] {
         if searchText.isEmpty {
@@ -162,7 +163,9 @@ struct MusicLibraryView: View {
                 ForEach(filteredItems, id: \.persistentID) { item in
                     MusicItemRow(
                         item: item,
-                        isExporting: exportingItem?.persistentID == item.persistentID && isExporting
+                        isExporting: exportingItem?.persistentID == item.persistentID && isExporting,
+                        exportProgress: musicManager.exportProgress,
+                        protectionStatusCache: $protectionStatusCache
                     ) {
                         exportAudio(item: item)
                     }
@@ -227,7 +230,11 @@ struct SearchBar: View {
 struct MusicItemRow: View {
     let item: MPMediaItem
     let isExporting: Bool
+    let exportProgress: Double
+    @Binding var protectionStatusCache: [MPMediaEntityPersistentID: Bool]
     let onSelect: () -> Void
+    
+    @State private var isProtected: Bool?
     
     var body: some View {
         HStack {
@@ -275,9 +282,9 @@ struct MusicItemRow: View {
                     
                     Spacer()
                     
-                    if let assetURL = item.assetURL {
-                        let asset = AVAsset(url: assetURL)
-                        if asset.hasProtectedContent {
+                    // Use cached protection status
+                    if let isProtected = isProtected {
+                        if isProtected {
                             Image(systemName: "lock.fill")
                                 .foregroundColor(.orange)
                                 .font(.caption)
@@ -286,6 +293,9 @@ struct MusicItemRow: View {
                                 .foregroundColor(.green)
                                 .font(.caption)
                         }
+                    } else {
+                        ProgressView()
+                            .scaleEffect(0.6)
                     }
                 }
             }
@@ -293,8 +303,14 @@ struct MusicItemRow: View {
             Spacer()
             
             if isExporting {
-                ProgressView()
-                    .scaleEffect(0.8)
+                VStack {
+                    ProgressView(value: exportProgress)
+                        .progressViewStyle(LinearProgressViewStyle())
+                        .frame(width: 60)
+                    Text("\(Int(exportProgress * 100))%")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
             } else {
                 Button(action: onSelect) {
                     Text(NSLocalizedString("import", comment: ""))
@@ -305,10 +321,44 @@ struct MusicItemRow: View {
                         .foregroundColor(.white)
                         .cornerRadius(12)
                 }
-                .disabled(isExporting)
+                .disabled(isExporting || isProtected == true)
             }
         }
         .padding(.vertical, 4)
+        .onAppear {
+            checkProtectionStatus()
+        }
+    }
+    
+    private func checkProtectionStatus() {
+        // Check cache first
+        if let cachedStatus = protectionStatusCache[item.persistentID] {
+            isProtected = cachedStatus
+            return
+        }
+        
+        // Check asynchronously and cache result
+        guard let assetURL = item.assetURL else {
+            isProtected = true // Assume protected if no URL
+            protectionStatusCache[item.persistentID] = true
+            return
+        }
+        
+        Task {
+            let asset = AVAsset(url: assetURL)
+            let hasProtectedContent: Bool
+            
+            do {
+                hasProtectedContent = try await asset.load(.hasProtectedContent)
+            } catch {
+                hasProtectedContent = true // Assume protected on error
+            }
+            
+            await MainActor.run {
+                isProtected = hasProtectedContent
+                protectionStatusCache[item.persistentID] = hasProtectedContent
+            }
+        }
     }
     
     private func formatDuration(_ duration: TimeInterval) -> String {

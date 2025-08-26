@@ -6,6 +6,9 @@ class MusicLibraryManager: NSObject, ObservableObject {
     @Published var musicItems: [MPMediaItem] = []
     @Published var isLoading = false
     @Published var authorizationStatus: MPMediaLibraryAuthorizationStatus = .notDetermined
+    @Published var exportProgress: Double = 0.0
+    
+    private var currentExportTask: Task<Void, Never>?
     
     override init() {
         super.init()
@@ -29,7 +32,7 @@ class MusicLibraryManager: NSObject, ObservableObject {
         
         isLoading = true
         
-        DispatchQueue.global(qos: .userInitiated).async {
+        Task {
             let query = MPMediaQuery.songs()
             
             // Filter for non-protected audio files (purchased, not DRM-protected)
@@ -40,14 +43,17 @@ class MusicLibraryManager: NSObject, ObservableObject {
             query.addFilterPredicate(predicate)
             
             // Only get items that can be exported
-            let items = query.items?.filter { item in
-                // Check if the item is available for export (not DRM protected)
-                guard let assetURL = item.assetURL else { return false }
-                return self.canExportAudio(from: assetURL)
-            } ?? []
+            var exportableItems: [MPMediaItem] = []
             
-            DispatchQueue.main.async {
-                self.musicItems = items
+            for item in query.items ?? [] {
+                guard let assetURL = item.assetURL else { continue }
+                if await self.canExportAudioAsync(from: assetURL) {
+                    exportableItems.append(item)
+                }
+            }
+            
+            await MainActor.run {
+                self.musicItems = exportableItems
                 self.isLoading = false
             }
         }
@@ -58,7 +64,28 @@ class MusicLibraryManager: NSObject, ObservableObject {
         return asset.isExportable && !asset.hasProtectedContent
     }
     
+    private func canExportAudioAsync(from url: URL) async -> Bool {
+        let asset = AVAsset(url: url)
+        do {
+            let isExportable = try await asset.load(.isExportable)
+            let hasProtectedContent = try await asset.load(.hasProtectedContent)
+            return isExportable && !hasProtectedContent
+        } catch {
+            return false
+        }
+    }
+    
     func exportAudioFile(from mediaItem: MPMediaItem, completion: @escaping (Result<URL, Error>) -> Void) {
+        // Cancel any existing export task
+        currentExportTask?.cancel()
+        
+        currentExportTask = Task {
+            await self.performExport(from: mediaItem, completion: completion)
+        }
+    }
+    
+    @MainActor
+    private func performExport(from mediaItem: MPMediaItem, completion: @escaping (Result<URL, Error>) -> Void) async {
         guard let assetURL = mediaItem.assetURL else {
             completion(.failure(AudioExportError.invalidURL))
             return
@@ -66,8 +93,17 @@ class MusicLibraryManager: NSObject, ObservableObject {
         
         let asset = AVAsset(url: assetURL)
         
-        guard asset.isExportable && !asset.hasProtectedContent else {
-            completion(.failure(AudioExportError.protectedContent))
+        // Check if asset is exportable and not protected
+        do {
+            let isExportable = try await asset.load(.isExportable)
+            let hasProtectedContent = try await asset.load(.hasProtectedContent)
+            
+            guard isExportable && !hasProtectedContent else {
+                completion(.failure(AudioExportError.protectedContent))
+                return
+            }
+        } catch {
+            completion(.failure(error))
             return
         }
         
@@ -79,25 +115,62 @@ class MusicLibraryManager: NSObject, ObservableObject {
         
         // Set up output URL
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let outputURL = documentsPath.appendingPathComponent("exported_\(UUID().uuidString).m4a")
+        let fileName = generateFileName(for: mediaItem)
+        let outputURL = documentsPath.appendingPathComponent(fileName)
+        
+        // Remove existing file if it exists
+        try? FileManager.default.removeItem(at: outputURL)
         
         exportSession.outputURL = outputURL
         exportSession.outputFileType = .m4a
         
-        exportSession.exportAsynchronously {
-            DispatchQueue.main.async {
-                switch exportSession.status {
-                case .completed:
-                    completion(.success(outputURL))
-                case .failed:
-                    completion(.failure(exportSession.error ?? AudioExportError.exportFailed))
-                case .cancelled:
-                    completion(.failure(AudioExportError.exportCancelled))
-                default:
-                    completion(.failure(AudioExportError.unknown))
-                }
+        // Check available disk space
+        do {
+            let resources = try outputURL.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
+            if let availableCapacity = resources.volumeAvailableCapacityForImportantUsage, availableCapacity < 50_000_000 { // 50MB
+                completion(.failure(AudioExportError.insufficientStorage))
+                return
+            }
+        } catch {
+            print("Could not check disk space: \(error)")
+        }
+        
+        // Start progress monitoring
+        let progressTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+            Task { @MainActor in
+                self.exportProgress = Double(exportSession.progress)
             }
         }
+        
+        do {
+            // Use new async export method
+            try await exportSession.export()
+            
+            progressTimer.invalidate()
+            self.exportProgress = 1.0
+            
+            completion(.success(outputURL))
+        } catch {
+            progressTimer.invalidate()
+            self.exportProgress = 0.0
+            
+            // Clean up failed export
+            try? FileManager.default.removeItem(at: outputURL)
+            
+            completion(.failure(error))
+        }
+    }
+    
+    private func generateFileName(for mediaItem: MPMediaItem) -> String {
+        let title = mediaItem.title?.replacingOccurrences(of: "/", with: "-") ?? "Unknown"
+        let artist = mediaItem.artist?.replacingOccurrences(of: "/", with: "-") ?? "Unknown"
+        let timestamp = Date().timeIntervalSince1970
+        return "\(artist) - \(title) - \(Int(timestamp)).m4a"
+    }
+    
+    func cancelExport() {
+        currentExportTask?.cancel()
+        exportProgress = 0.0
     }
 }
 
@@ -107,6 +180,7 @@ enum AudioExportError: LocalizedError {
     case exportSessionFailed
     case exportFailed
     case exportCancelled
+    case insufficientStorage
     case unknown
     
     var errorDescription: String? {
@@ -121,6 +195,8 @@ enum AudioExportError: LocalizedError {
             return NSLocalizedString("Audio export failed", comment: "")
         case .exportCancelled:
             return NSLocalizedString("Audio export was cancelled", comment: "")
+        case .insufficientStorage:
+            return NSLocalizedString("Insufficient storage space for export", comment: "")
         case .unknown:
             return NSLocalizedString("Unknown error occurred during export", comment: "")
         }
