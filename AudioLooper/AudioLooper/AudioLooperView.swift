@@ -65,8 +65,7 @@ struct AudioLooperView: View {
             audioLooperManager.loadSavedAudioFiles()
         }
         .fullScreenCover(isPresented: $showPurchaseView) {
-            PurchaseView(isPresented: $showPurchaseView)
-                .environmentObject(purchaseModel)
+            PurchaseView(purchaseModel: purchaseModel, isPresented: $showPurchaseView)
         }
         .sheet(isPresented: $showingMailComposer) {
             MailComposeView()

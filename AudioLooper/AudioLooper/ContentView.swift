@@ -54,14 +54,17 @@ struct ContentView: View {
                             color: .blue,
                             onboardingCompleted: {}
                         ),
-                        purchaseView: PurchaseView(isPresented: .init(
-                            get: { appFlowManager.showPurchaseView },
-                            set: { newValue in
-                                if !newValue {
-                                    appFlowManager.purchaseViewDismissed()
+                        purchaseView: PurchaseView(
+                            purchaseModel: purchaseModel,
+                            isPresented: .init(
+                                get: { appFlowManager.showPurchaseView },
+                                set: { newValue in
+                                    if !newValue {
+                                        appFlowManager.purchaseViewDismissed()
+                                    }
                                 }
-                            }
-                        ))
+                            )
+                        )
                     )
             } else {
                 // iPhone view - keep original navigation style
@@ -96,14 +99,17 @@ struct ContentView: View {
                             color: .blue,
                             onboardingCompleted: {}
                         ),
-                        purchaseView: PurchaseView(isPresented: .init(
-                            get: { appFlowManager.showPurchaseView },
-                            set: { newValue in
-                                if !newValue {
-                                    appFlowManager.purchaseViewDismissed()
+                        purchaseView: PurchaseView(
+                            purchaseModel: purchaseModel,
+                            isPresented: .init(
+                                get: { appFlowManager.showPurchaseView },
+                                set: { newValue in
+                                    if !newValue {
+                                        appFlowManager.purchaseViewDismissed()
+                                    }
                                 }
-                            }
-                        ))
+                            )
+                        )
                     )
             }
         }

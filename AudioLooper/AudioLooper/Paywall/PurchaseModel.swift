@@ -160,19 +160,33 @@ class PurchaseModel: ObservableObject {
     func loadProducts() async {
         self.isFetchingProducts = true
         
+        print("Loading products with IDs: \(productIds)")
+        
         do {
             // Request products from the App Store
             let storeProducts = try await Product.products(for: Set(productIds))
+            
+            print("Found \(storeProducts.count) products from App Store:")
+            for product in storeProducts {
+                print("- Product ID: \(product.id), Price: \(product.displayPrice), Type: \(product.type)")
+            }
+            
+            if storeProducts.isEmpty {
+                print("⚠️ No products returned from App Store")
+            }
+            
             self.products = storeProducts
             
             // Update product details with actual prices
             for product in storeProducts {
                 if let index = self.productDetails.firstIndex(where: { $0.productId == product.id }) {
                     self.productDetails[index].price = product.displayPrice
+                    print("Updated price for \(product.id): \(product.displayPrice)")
                 }
             }
         } catch {
-            print("Failed to load products: \(error)")
+            print("❌ Failed to load products: \(error)")
+            print("Error details: \(error.localizedDescription)")
         }
         
         self.isFetchingProducts = false
@@ -180,8 +194,11 @@ class PurchaseModel: ObservableObject {
     
     @MainActor
     func purchaseSubscription(productId: String) {
+        print("Attempting to purchase product: \(productId)")
+        print("Available products: \(products.map { $0.id })")
+        
         guard let product = products.first(where: { $0.id == productId }) else {
-            print("Product not found: \(productId)")
+            print("❌ Product not found: \(productId)")
             return
         }
         
@@ -231,11 +248,17 @@ class PurchaseModel: ObservableObject {
         // 使用静态常量检查产品 ID
         if transaction.productID == PurchaseModel.yearlySubscriptionId ||
            transaction.productID == PurchaseModel.weeklySubscriptionId {
+            let wasSubscribed = self.isSubscribed
             self.isSubscribed = true
             
             // 计算订阅到期时间
             if let expirationDate = transaction.expirationDate {
                 saveSubscriptionStatus(productId: transaction.productID, expirationDate: expirationDate)
+            }
+            
+            // 如果之前未订阅，现在订阅了，发送通知
+            if !wasSubscribed {
+                NotificationCenter.default.post(name: .subscriptionStatusChanged, object: nil)
             }
         }
     }
@@ -243,7 +266,9 @@ class PurchaseModel: ObservableObject {
     @MainActor
     private func updateSubscriptionStatus() async {
         do {
+            let wasSubscribed = self.isSubscribed
             var foundActiveSubscription = false
+            
             // Check all subscription groups
             for await result in Transaction.currentEntitlements {
                 do {
@@ -254,6 +279,7 @@ class PurchaseModel: ObservableObject {
                         if let expirationDate = transaction.expirationDate {
                             if expirationDate > Date() {
                                 foundActiveSubscription = true
+                                self.isSubscribed = true
                                 saveSubscriptionStatus(productId: transaction.productID, expirationDate: expirationDate)
                                 break
                             }
@@ -267,6 +293,11 @@ class PurchaseModel: ObservableObject {
             // If we get here and haven't found an active subscription, clear the data
             if !foundActiveSubscription {
                 clearSubscriptionData()
+            }
+            
+            // 如果订阅状态发生变化，发送通知
+            if wasSubscribed != self.isSubscribed {
+                NotificationCenter.default.post(name: .subscriptionStatusChanged, object: nil)
             }
         }
     }
@@ -300,4 +331,8 @@ class PurchaseProductDetails: ObservableObject, Identifiable {
     }
 }
 
+// MARK: - Notification Names
+extension Notification.Name {
+    static let subscriptionStatusChanged = Notification.Name("subscriptionStatusChanged")
+}
 

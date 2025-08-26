@@ -5,7 +5,7 @@ import SwiftUI
 
 struct PurchaseView: View {
     
-    @StateObject var purchaseModel: PurchaseModel = PurchaseModel()
+    @ObservedObject var purchaseModel: PurchaseModel
     
     @State private var shakeDegrees = 0.0
     @State private var shakeZoom = 0.9
@@ -476,5 +476,5 @@ struct PurchaseView: View {
 }
 
 #Preview {
-    PurchaseView(isPresented: .constant(true))
+    PurchaseView(purchaseModel: PurchaseModel(), isPresented: .constant(true))
 }
